@@ -164,6 +164,72 @@ export interface Database {
           updated_at?: string
         }
       }
+      project_members: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          role: 'admin' | 'member'
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          role: 'admin' | 'member'
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          role?: 'admin' | 'member'
+          joined_at?: string
+        }
+      }
+      invitation_codes: {
+        Row: {
+          id: string
+          project_id: string
+          code: string
+          created_by: string
+          created_at: string
+          expires_at: string | null
+          max_uses: number | null
+          uses_count: number
+          is_active: boolean
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          code: string
+          created_by: string
+          created_at?: string
+          expires_at?: string | null
+          max_uses?: number | null
+          uses_count?: number
+          is_active?: boolean
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          code?: string
+          created_by?: string
+          created_at?: string
+          expires_at?: string | null
+          max_uses?: number | null
+          uses_count?: number
+          is_active?: boolean
+        }
+      }
+    }
+    Functions: {
+      use_invitation_code: {
+        Args: {
+          invitation_code: string
+        }
+        Returns: string
+      }
     }
   }
 }

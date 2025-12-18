@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, UserPlus, Mail, Lock, ArrowLeft, Send, CheckCircle } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, ArrowLeft, Send, CheckCircle, Key } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type AuthView = 'login' | 'signup' | 'forgot-password';
@@ -9,6 +9,7 @@ export default function Auth() {
   const [currentView, setCurrentView] = useState<AuthView>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resetEmailSent, setResetEmailSent] = useState(false);
@@ -24,8 +25,24 @@ export default function Auth() {
         await signIn(email, password);
       } else if (currentView === 'signup') {
         await signUp(email, password);
+
+        if (invitationCode.trim()) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { error: inviteError } = await supabase.rpc('use_invitation_code', {
+              invitation_code: invitationCode.trim()
+            });
+
+            if (inviteError) {
+              setError(`Cuenta creada, pero error al usar código de invitación: ${inviteError.message}`);
+              return;
+            }
+          }
+        }
+
         alert('Cuenta creada exitosamente. Por favor inicia sesión.');
         setCurrentView('login');
+        setInvitationCode('');
       }
     } catch (err: any) {
       setError(err.message || 'Error al procesar la solicitud');
@@ -207,6 +224,28 @@ export default function Auth() {
                   />
                 </div>
               </div>
+
+              {currentView === 'signup' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                    Código de Invitación
+                    <span className="text-gray-500 font-normal text-xs ml-2">(Opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={22} />
+                    <input
+                      type="text"
+                      value={invitationCode}
+                      onChange={(e) => setInvitationCode(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
+                      placeholder="ABC123"
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Si tienes un código, únete a un proyecto existente
+                  </p>
+                </div>
+              )}
 
               {error && (
                 <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-xl">

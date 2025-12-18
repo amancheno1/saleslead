@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Plus, Trash2, Edit2, Building2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Building2, Key, Users } from 'lucide-react';
+import InvitationCodes from './InvitationCodes';
+import ProjectMembers from './ProjectMembers';
+import { useProject } from '../context/ProjectContext';
 
 interface Project {
   id: string;
@@ -12,12 +15,16 @@ interface Project {
   created_at: string;
 }
 
+type AdminTab = 'projects' | 'invitations' | 'members';
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { currentProject } = useProject();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>('projects');
 
   const [newProject, setNewProject] = useState({
     name: '',
@@ -117,11 +124,56 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Proyectos</h1>
-        <p className="text-gray-600">Administra tus proyectos de leads</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
+        <p className="text-gray-600">Gestiona proyectos, miembros y códigos de invitación</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === 'projects'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Building2 size={20} />
+              Proyectos
+            </button>
+            {currentProject && (
+              <>
+                <button
+                  onClick={() => setActiveTab('invitations')}
+                  className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                    activeTab === 'invitations'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Key size={20} />
+                  Códigos de Invitación
+                </button>
+                <button
+                  onClick={() => setActiveTab('members')}
+                  className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                    activeTab === 'members'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Users size={20} />
+                  Miembros
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
+      </div>
+
+      {activeTab === 'projects' && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900">Proyectos</h2>
           <button
@@ -281,7 +333,24 @@ export default function AdminDashboard() {
             ))
           )}
         </div>
-      </div>
+        </div>
+      )}
+
+      {activeTab === 'invitations' && currentProject && (
+        <InvitationCodes />
+      )}
+
+      {activeTab === 'members' && currentProject && (
+        <ProjectMembers />
+      )}
+
+      {!currentProject && activeTab !== 'projects' && (
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          <Building2 className="mx-auto text-gray-400 mb-4" size={64} />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Selecciona un Proyecto</h3>
+          <p className="text-gray-600">Primero debes seleccionar un proyecto para gestionar sus miembros y códigos de invitación</p>
+        </div>
+      )}
     </div>
   );
 }
