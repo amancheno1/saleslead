@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Database, Calendar, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Database, Calendar, Plus, Edit2, Trash2, Save, X, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
@@ -147,6 +148,23 @@ export default function MetaLeads() {
     return `${startStr} - ${endStr}`;
   };
 
+  const exportToExcel = () => {
+    const dataToExport = metaLeads.map(metaLead => ({
+      'Semana': formatWeekRange(metaLead.week_start_date),
+      'Año': metaLead.year,
+      'Número de Semana': metaLead.week_number,
+      'Cantidad de Leads': metaLead.leads_count,
+      'Fecha de Registro': new Date(metaLead.created_at).toLocaleDateString('es-ES')
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads Meta');
+
+    const fileName = `Leads_Meta_${new Date().toLocaleDateString('es-ES')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Cargando...</div>;
   }
@@ -164,15 +182,26 @@ export default function MetaLeads() {
               <p className="text-sm text-gray-600">Registro semanal de leads de formularios Meta</p>
             </div>
           </div>
-          {!showForm && (
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus size={20} />
-              Agregar Semana
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {metaLeads.length > 0 && (
+              <button
+                onClick={exportToExcel}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Download size={20} />
+                Exportar Excel
+              </button>
+            )}
+            {!showForm && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus size={20} />
+                Agregar Semana
+              </button>
+            )}
+          </div>
         </div>
 
         {showForm && (

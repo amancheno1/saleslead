@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Calendar, DollarSign, Target, Phone, CheckCircle, XCircle, Clock, BarChart3, Zap, ArrowUp, Activity } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, Target, Phone, CheckCircle, XCircle, Clock, BarChart3, Zap, ArrowUp, Activity, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import MonthlyComparison from './MonthlyComparison';
@@ -100,6 +101,47 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     };
   };
 
+  const exportDashboardToExcel = () => {
+    const metrics = calculateMetrics();
+    const currentMonth = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
+    const summaryData = [
+      { 'Métrica': 'Meta Semanal', 'Valor': metrics.weeklyGoal },
+      { 'Métrica': 'Meta Mensual', 'Valor': metrics.monthlyGoal },
+      { 'Métrica': 'Total Leads', 'Valor': metrics.totalLeads },
+      { 'Métrica': 'Llamadas Agendadas', 'Valor': metrics.scheduled },
+      { 'Métrica': 'Llamadas Asistidas', 'Valor': metrics.attended },
+      { 'Métrica': 'Llamadas Canceladas', 'Valor': metrics.cancelled },
+      { 'Métrica': 'No Show', 'Valor': metrics.noShow },
+      { 'Métrica': 'Ofertas Realizadas', 'Valor': metrics.offersGiven },
+      { 'Métrica': 'Ventas Cerradas', 'Valor': metrics.sales },
+      { 'Métrica': 'Facturación Total', 'Valor': `$${metrics.totalRevenue.toFixed(2)}` },
+      { 'Métrica': 'Cash Collected', 'Valor': `$${metrics.totalCashCollected.toFixed(2)}` },
+      { 'Métrica': 'Tasa de Agendamiento', 'Valor': `${metrics.scheduledRate.toFixed(1)}%` },
+      { 'Métrica': 'Show Rate', 'Valor': `${metrics.showRate.toFixed(1)}%` },
+      { 'Métrica': 'Close Rate', 'Valor': `${metrics.closeRate.toFixed(1)}%` },
+      { 'Métrica': '$ Por Lead', 'Valor': metrics.totalLeads > 0 ? `$${(metrics.totalRevenue / metrics.totalLeads).toFixed(2)}` : '$0' }
+    ];
+
+    const weeklyData = metrics.leadsByWeek.map(week => ({
+      'Semana': `Semana ${week.week}`,
+      'Leads': week.leads,
+      'Meta': week.goal,
+      'Cumplimiento': `${week.percentage.toFixed(1)}%`
+    }));
+
+    const wb = XLSX.utils.book_new();
+
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+
+    const wsWeekly = XLSX.utils.json_to_sheet(weeklyData);
+    XLSX.utils.book_append_sheet(wb, wsWeekly, 'Desglose Semanal');
+
+    const fileName = `Dashboard_${currentMonth.replace(' ', '_')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -116,6 +158,16 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
 
   return (
     <div className="space-y-8 pb-8">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={exportDashboardToExcel}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-lg"
+        >
+          <Download size={18} />
+          Exportar Dashboard
+        </button>
+      </div>
+
       <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 rounded-3xl shadow-2xl p-8 md:p-12">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40"></div>
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse"></div>

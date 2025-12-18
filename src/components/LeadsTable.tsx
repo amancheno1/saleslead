@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import type { Database } from '../lib/database.types';
@@ -84,6 +85,39 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
     return { setterCommissionSale, setterCommissionCash, closerCommission };
   };
 
+  const exportToExcel = () => {
+    const leadsToExport = filteredLeads.map(lead => {
+      const commissions = calculateCommissions(lead);
+      return {
+        'Nombre': `${lead.first_name} ${lead.last_name}`,
+        'Formulario': lead.form_type,
+        'Fecha de Entrada': new Date(lead.entry_date).toLocaleDateString('es-ES'),
+        'Fecha de Contacto': lead.contact_date ? new Date(lead.contact_date).toLocaleDateString('es-ES') : '',
+        'Llamada Agendada': lead.scheduled_call_date ? new Date(lead.scheduled_call_date).toLocaleDateString('es-ES') : '',
+        'Asistió': lead.attended_meeting === null ? '' : lead.attended_meeting ? 'Sí' : 'No',
+        'Resultado': lead.result || '',
+        'Venta': lead.sale_made ? 'Sí' : 'No',
+        'Importe Venta': lead.sale_amount || 0,
+        'Cash Collected': lead.cash_collected || 0,
+        'Método de Pago': lead.payment_method || '',
+        'Comisión Setter': commissions.setterCommissionCash,
+        'Comisión Closer': commissions.closerCommission,
+        'Closer': lead.closer || '',
+        'Observaciones': lead.observations || ''
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(leadsToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+
+    const fileName = viewMode === 'monthly'
+      ? `Leads_${getMonthName(selectedMonth)}_${selectedYear}.xlsx`
+      : `Leads_Total_${new Date().toLocaleDateString('es-ES')}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Cargando leads...</div>;
   }
@@ -140,8 +174,18 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
             </div>
           )}
 
-          <div className="ml-auto text-sm text-gray-600 font-medium">
-            {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
+          <div className="ml-auto flex items-center gap-4">
+            <div className="text-sm text-gray-600 font-medium">
+              {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
+            </div>
+            <button
+              onClick={exportToExcel}
+              disabled={filteredLeads.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+            >
+              <Download size={18} />
+              Exportar Excel
+            </button>
           </div>
         </div>
       </div>
