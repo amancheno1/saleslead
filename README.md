@@ -1,30 +1,20 @@
-# Lead Tracker - Sistema de Gestión de Ventas Multi-Proyecto
+# Lead Tracker - Sistema de Gestión de Ventas
 
-Sistema completo de gestión de leads con arquitectura multi-proyecto, control de usuarios basado en roles y panel de administración avanzado.
+Sistema completo de gestión de leads con arquitectura multi-proyecto para organizar y dar seguimiento a tus oportunidades de negocio.
 
-## 🚀 Características Principales
+## Características Principales
 
 ### Sistema Multi-Proyecto
-- **Proyectos Ilimitados**: Crea y gestiona múltiples proyectos independientes
-- **Aislamiento Total**: Los datos de cada proyecto están completamente aislados
-- **Gestión Centralizada**: Panel de administración para control total
-
-### Sistema de Roles y Permisos
-- **Super Admin**: Control total del sistema, todos los proyectos y usuarios
-- **Admin Proyecto**: Gestiona su proyecto específico y sus miembros
-- **Miembro**: Acceso solo a su proyecto asignado
-
-### Panel de Administración
-- **Estadísticas Globales**: Vista consolidada de todos los proyectos (Super Admin)
-- **Gestión de Proyectos**: Crear, editar, activar/desactivar proyectos
-- **Gestión de Usuarios**: Editar roles, asignar proyectos, administrar permisos
-- **Códigos de Invitación**: Sistema seguro para incorporar usuarios
+- Crea y gestiona múltiples proyectos independientes
+- Cambia fácilmente entre proyectos desde el selector
+- Datos completamente aislados entre proyectos
 
 ### Gestión de Leads
-- **Dashboard Completo**: Métricas en tiempo real y visualización de progreso
-- **Tabla de Leads**: Filtrado, búsqueda y gestión completa
-- **Formulario Avanzado**: Captura detallada de información
-- **Estados Personalizables**: Seguimiento del ciclo de vida del lead
+- Dashboard con métricas en tiempo real
+- Tabla completa con filtrado y búsqueda
+- Formulario detallado de captura
+- Seguimiento del ciclo de vida del lead
+- Estados: pendiente, contactado, convertido, no convertido
 
 ### Módulos Adicionales
 - **Facturación**: Control de ingresos y ventas
@@ -32,7 +22,7 @@ Sistema completo de gestión de leads con arquitectura multi-proyecto, control d
 - **Leads Meta**: Registro semanal de leads de formularios Meta
 - **Comparativa Mensual**: Análisis de rendimiento por mes
 
-## 📋 Tecnologías
+## Tecnologías
 
 - **Frontend**: React + TypeScript + Vite
 - **Estilos**: Tailwind CSS
@@ -41,7 +31,7 @@ Sistema completo de gestión de leads con arquitectura multi-proyecto, control d
 - **Seguridad**: Row Level Security (RLS)
 - **Iconos**: Lucide React
 
-## 🔧 Instalación
+## Instalación
 
 1. **Clonar el repositorio**
 ```bash
@@ -56,7 +46,7 @@ npm install
 
 3. **Configurar variables de entorno**
 
-Crea un archivo `.env` con tus credenciales de Supabase:
+Crea un archivo `.env`:
 ```env
 VITE_SUPABASE_URL=tu_supabase_url
 VITE_SUPABASE_ANON_KEY=tu_supabase_anon_key
@@ -72,164 +62,110 @@ npm run dev
 npm run build
 ```
 
-## 📊 Configuración de la Base de Datos
+## Estructura de la Base de Datos
 
-### Aplicar Migraciones
+### Tablas Principales
 
-Las migraciones se encuentran en `/supabase/migrations/`. Ejecuta en orden:
+**projects**
+- Almacena información de cada proyecto
+- Campos: name, description, weekly_goal, user_id
 
-1. `20251218142225_add_admin_roles_and_project_isolation.sql` - Sistema de roles y aislamiento
+**leads**
+- Todos los leads del sistema
+- Relacionados a un proyecto específico
+- Campos detallados para seguimiento completo
 
-### Configuración Rápida
+**meta_leads**
+- Registro semanal de leads de Meta
+- Útil para seguimiento de campañas
 
-Usa el script `setup_super_admin.sql` para configuración automática:
+**settings**
+- Configuración global del sistema
 
-1. Ve a tu proyecto en Supabase Dashboard
-2. Abre "SQL Editor"
-3. Copia y pega el contenido de `setup_super_admin.sql`
-4. Ejecuta el script
-5. Sigue las instrucciones en pantalla
+## Configuración de la Base de Datos
 
-## 👤 Configurar Super Administrador
+1. Crea las tablas necesarias en Supabase
+2. Habilita Row Level Security (RLS) en todas las tablas
+3. Configura las políticas de acceso para cada usuario
 
-### Método 1: Script SQL (Recomendado)
-
-1. Ejecuta `setup_super_admin.sql` en Supabase
-2. Registra tu cuenta con el código generado
-3. Ejecuta el script de nuevo para promover a super admin
-
-### Método 2: URL Especial
-
-1. Registra tu cuenta normalmente
-2. Ve a: `/?setup=super-admin`
-3. Haz clic en "Promote to Super Admin"
-
-### Método 3: SQL Manual
+Políticas RLS sugeridas:
 
 ```sql
-UPDATE user_profiles
-SET role = 'super_admin', project_id = NULL
-WHERE email = 'tu@email.com';
+-- Projects: Los usuarios solo ven sus proyectos
+CREATE POLICY "Users can view own projects"
+  ON projects FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+-- Leads: Los usuarios solo ven leads de sus proyectos
+CREATE POLICY "Users can view project leads"
+  ON leads FOR SELECT
+  TO authenticated
+  USING (
+    project_id IN (
+      SELECT id FROM projects WHERE user_id = auth.uid()
+    )
+  );
 ```
 
-Para más detalles, consulta: `CONFIGURACION_SUPER_ADMIN.md`
+## Uso del Sistema
 
-## 🎯 Flujo de Trabajo
+### Crear un Proyecto
 
-### 1. Como Super Admin
+1. Inicia sesión en la aplicación
+2. Si no tienes proyectos, se te pedirá crear uno
+3. Ve a "Proyectos" en el menú lateral
+4. Haz clic en "Nuevo Proyecto"
+5. Completa el formulario:
+   - Nombre del proyecto
+   - Descripción (opcional)
+   - Meta semanal de leads
+6. Haz clic en "Crear"
 
-```
-1. Crear Proyecto
-   ↓
-2. Generar Código de Invitación
-   ↓
-3. Compartir Código con Usuarios
-   ↓
-4. Usuarios se Registran Automáticamente
-   ↓
-5. Gestionar Roles y Permisos
-```
+### Cambiar entre Proyectos
 
-### 2. Como Admin de Proyecto
+1. Usa el selector de proyectos en la barra lateral
+2. Selecciona el proyecto deseado
+3. Todos los datos se actualizarán automáticamente
 
-```
-1. Gestionar Leads de tu Proyecto
-   ↓
-2. Ver Estadísticas del Proyecto
-   ↓
-3. Generar Códigos para tu Proyecto
-   ↓
-4. Ver Miembros del Proyecto
-```
+### Gestionar Leads
 
-### 3. Como Miembro
+1. **Agregar Lead**: Usa el formulario para capturar información
+2. **Ver Leads**: La tabla muestra todos los leads del proyecto actual
+3. **Editar Lead**: Haz clic en el icono de edición en la tabla
+4. **Filtrar**: Usa los filtros por estado, mes y búsqueda
 
-```
-1. Ver Leads del Proyecto
-   ↓
-2. Agregar/Editar Leads
-   ↓
-3. Ver Estadísticas del Proyecto
-   ↓
-4. Gestionar Facturación y Comisiones
-```
+### Dashboard
 
-## 🔐 Seguridad
-
-### Row Level Security (RLS)
-
-Todas las tablas implementan RLS con políticas estrictas:
-
-- **Proyectos**: Los usuarios solo ven sus proyectos asignados
-- **Leads**: Aislamiento total entre proyectos
-- **Usuarios**: Super admins ven todos, otros solo su proyecto
-- **Invitaciones**: Solo creadores y super admins
-
-### Códigos de Invitación
-
-- Códigos únicos de 8 caracteres
-- Límites de uso configurables
-- Fecha de expiración automática
-- Pueden desactivarse en cualquier momento
-
-### Autenticación
-
-- Email y contraseña con Supabase Auth
-- Sesiones seguras con tokens JWT
-- Verificación de permisos en cada operación
-
-## 📁 Estructura del Proyecto
-
-```
-lead-tracker/
-├── src/
-│   ├── components/          # Componentes de React
-│   │   ├── AdminDashboard.tsx       # Panel de administración
-│   │   ├── Auth.tsx                 # Autenticación
-│   │   ├── Dashboard.tsx            # Dashboard principal
-│   │   ├── LeadsTable.tsx           # Tabla de leads
-│   │   ├── LeadForm.tsx             # Formulario de leads
-│   │   ├── SuperAdminSetup.tsx      # Setup super admin
-│   │   └── ...
-│   ├── context/             # Contextos de React
-│   │   ├── AuthContext.tsx          # Contexto de autenticación
-│   │   └── ProjectContext.tsx       # Contexto de proyecto
-│   ├── lib/                 # Utilidades
-│   │   ├── supabase.ts              # Cliente de Supabase
-│   │   ├── adminSetup.ts            # Funciones de setup
-│   │   └── database.types.ts        # Tipos TypeScript
-│   └── App.tsx              # Componente principal
-├── supabase/
-│   └── migrations/          # Migraciones SQL
-├── setup_super_admin.sql    # Script de configuración
-└── CONFIGURACION_SUPER_ADMIN.md  # Guía detallada
-
-```
-
-## 🎨 Características de Diseño
-
-- **Diseño Responsivo**: Funciona perfectamente en móviles y desktop
-- **Tema Moderno**: Interfaz limpia con gradientes y sombras
-- **Iconografía Consistente**: Lucide React para todos los iconos
-- **Feedback Visual**: Estados de carga, confirmaciones y mensajes claros
-- **Modo Móvil**: Menú desplegable optimizado para móviles
-
-## 📈 Métricas y Estadísticas
-
-### Dashboard General
-- Leads totales y por estado
-- Progreso semanal
+El dashboard muestra:
+- Total de leads
+- Leads pendientes, contactados y convertidos
+- Progreso semanal hacia la meta
 - Tasa de conversión
 - Ingresos del mes
 
-### Panel de Administración (Super Admin)
-- Total de proyectos activos
-- Leads consolidados de todos los proyectos
-- Conversiones globales
-- Ingresos totales
-- Desglose detallado por proyecto
+### Facturación
 
-## 🛠️ Scripts Disponibles
+- Vista consolidada de todas las ventas
+- Exportación a Excel
+- Filtrado por periodo
+- Totales y promedios
+
+### Comisiones
+
+- Cálculo automático basado en ventas
+- Configuración de porcentajes por closer
+- Exportación de reportes
+
+## Características de Diseño
+
+- **Diseño Responsivo**: Funciona en móviles y desktop
+- **Tema Moderno**: Gradientes y sombras elegantes
+- **Iconografía Consistente**: Lucide React
+- **Feedback Visual**: Estados de carga y mensajes claros
+- **Menú Móvil**: Navegación optimizada para pantallas pequeñas
+
+## Scripts Disponibles
 
 ```bash
 # Desarrollo
@@ -248,42 +184,49 @@ npm run lint
 npm run typecheck
 ```
 
-## 📝 Documentación Adicional
+## Seguridad
 
-- `CONFIGURACION_SUPER_ADMIN.md` - Guía completa de configuración
-- `SUPER_ADMIN_SETUP.md` - Setup rápido del super admin
-- `ADMIN_GUIDE.md` - Guía para administradores
+- Autenticación mediante Supabase Auth
+- Row Level Security en todas las tablas
+- Tokens JWT para sesiones seguras
+- Datos aislados entre usuarios y proyectos
 
-## 🤝 Contribución
+## Estructura del Proyecto
 
-Este es un proyecto privado. Para contribuir:
+```
+lead-tracker/
+├── src/
+│   ├── components/          # Componentes de React
+│   │   ├── AdminDashboard.tsx       # Gestión de proyectos
+│   │   ├── Auth.tsx                 # Autenticación
+│   │   ├── Dashboard.tsx            # Dashboard principal
+│   │   ├── LeadsTable.tsx           # Tabla de leads
+│   │   ├── LeadForm.tsx             # Formulario de leads
+│   │   ├── Billing.tsx              # Facturación
+│   │   ├── Commissions.tsx          # Comisiones
+│   │   ├── MetaLeads.tsx            # Leads Meta
+│   │   └── ...
+│   ├── context/             # Contextos de React
+│   │   ├── AuthContext.tsx          # Autenticación
+│   │   └── ProjectContext.tsx       # Proyectos
+│   ├── lib/                 # Utilidades
+│   │   ├── supabase.ts              # Cliente Supabase
+│   │   └── database.types.ts        # Tipos TypeScript
+│   └── App.tsx              # Componente principal
+└── package.json
+```
 
-1. Fork del proyecto
-2. Crea una rama para tu feature
-3. Commit de cambios
-4. Push a la rama
-5. Crea un Pull Request
-
-## 📄 Licencia
+## Licencia
 
 © 2024 Alejandro Mancheño Rey. Todos los derechos reservados.
 
-## 🆘 Soporte
+## Soporte
 
 Para problemas o preguntas:
-- Revisa `CONFIGURACION_SUPER_ADMIN.md` para problemas comunes
-- Verifica los permisos en la base de datos
-- Asegúrate de que RLS esté habilitado
-
-## 🎉 Características Futuras
-
-- [ ] Exportación de reportes en PDF
-- [ ] Notificaciones por email
-- [ ] Integración con WhatsApp
-- [ ] Dashboard personalizable
-- [ ] Análisis predictivo con IA
-- [ ] App móvil nativa
+- Verifica la configuración de Supabase
+- Asegúrate de que RLS esté configurado correctamente
+- Revisa las credenciales en el archivo .env
 
 ---
 
-**Desarrollado con ❤️ por Alejandro Mancheño Rey**
+**Desarrollado por Alejandro Mancheño Rey**

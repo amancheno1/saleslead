@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, Shield } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, Building2 } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -12,7 +12,6 @@ import Commissions from './components/Commissions';
 import MetaLeads from './components/MetaLeads';
 import AdminDashboard from './components/AdminDashboard';
 import ProjectSelector from './components/ProjectSelector';
-import SuperAdminSetup from './components/SuperAdminSetup';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -20,20 +19,12 @@ type Lead = Database['public']['Tables']['leads']['Row'];
 type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'admin';
 
 function App() {
-  const { user, profile, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { currentProject, loading: projectLoading } = useProject();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingLead, setEditingLead] = useState<Lead | undefined>(undefined);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showSuperAdminSetup, setShowSuperAdminSetup] = useState(false);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('setup') === 'super-admin') {
-      setShowSuperAdminSetup(true);
-    }
-  }, []);
 
   const handleFormSuccess = () => {
     setCurrentView('leads');
@@ -96,10 +87,6 @@ function App() {
 
   if (!user) {
     return <Auth />;
-  }
-
-  if (showSuperAdminSetup && user) {
-    return <SuperAdminSetup />;
   }
 
   if (projectLoading) {
@@ -200,14 +187,12 @@ function App() {
                 view="meta-leads"
                 active={currentView === 'meta-leads'}
               />
-              {(profile?.role === 'super_admin' || profile?.role === 'project_admin') && (
-                <NavButton
-                  icon={Shield}
-                  label="Administración"
-                  view="admin"
-                  active={currentView === 'admin'}
-                />
-              )}
+              <NavButton
+                icon={Building2}
+                label="Proyectos"
+                view="admin"
+                active={currentView === 'admin'}
+              />
               <NavButton
                 icon={SettingsIcon}
                 label="Configuración"
@@ -250,7 +235,7 @@ function App() {
               {currentView === 'billing' && 'Facturación'}
               {currentView === 'commissions' && 'Comisiones'}
               {currentView === 'meta-leads' && 'Leads Meta'}
-              {currentView === 'admin' && 'Administración'}
+              {currentView === 'admin' && 'Proyectos'}
               {currentView === 'settings' && 'Configuración'}
             </h2>
             <div className="w-6" />
