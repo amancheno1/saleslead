@@ -308,6 +308,14 @@ function App() {
               )}
             </div>
           </main>
+
+          <footer className="bg-white border-t border-gray-200 py-4 px-4 md:px-8">
+            <div className="max-w-[1800px] mx-auto text-center">
+              <p className="text-sm text-gray-600">
+                © {new Date().getFullYear()} <span className="font-semibold text-gray-900">Alejandro Mancheño Rey</span>. Todos los derechos reservados.
+              </p>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

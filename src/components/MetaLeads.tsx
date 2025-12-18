@@ -149,6 +149,21 @@ export default function MetaLeads() {
   };
 
   const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const infoData = [
+      ['Sistema de Gestión de Leads'],
+      [''],
+      ['Propiedad de:', 'Alejandro Mancheño Rey'],
+      ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')],
+      ['Tipo de Informe:', 'Leads de Meta - Registro Semanal'],
+      [''],
+      ['© ' + new Date().getFullYear() + ' Alejandro Mancheño Rey. Todos los derechos reservados.']
+    ];
+
+    const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Información');
+
     const dataToExport = metaLeads.map(metaLead => ({
       'Semana': formatWeekRange(metaLead.week_start_date),
       'Año': metaLead.year,
@@ -158,10 +173,9 @@ export default function MetaLeads() {
     }));
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Leads Meta');
 
-    const fileName = `Leads_Meta_${new Date().toLocaleDateString('es-ES')}.xlsx`;
+    const fileName = `Leads_Meta_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 

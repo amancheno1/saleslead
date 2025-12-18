@@ -105,6 +105,22 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     const metrics = calculateMetrics();
     const currentMonth = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
+    const wb = XLSX.utils.book_new();
+
+    const infoData = [
+      ['Sistema de Gestión de Leads'],
+      [''],
+      ['Propiedad de:', 'Alejandro Mancheño Rey'],
+      ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')],
+      ['Tipo de Informe:', 'Dashboard - Métricas del Mes'],
+      ['Periodo:', currentMonth],
+      [''],
+      ['© ' + new Date().getFullYear() + ' Alejandro Mancheño Rey. Todos los derechos reservados.']
+    ];
+
+    const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Información');
+
     const summaryData = [
       { 'Métrica': 'Meta Semanal', 'Valor': metrics.weeklyGoal },
       { 'Métrica': 'Meta Mensual', 'Valor': metrics.monthlyGoal },
@@ -123,17 +139,15 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       { 'Métrica': '$ Por Lead', 'Valor': metrics.totalLeads > 0 ? `$${(metrics.totalRevenue / metrics.totalLeads).toFixed(2)}` : '$0' }
     ];
 
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+
     const weeklyData = metrics.leadsByWeek.map(week => ({
       'Semana': `Semana ${week.week}`,
       'Leads': week.leads,
       'Meta': week.goal,
       'Cumplimiento': `${week.percentage.toFixed(1)}%`
     }));
-
-    const wb = XLSX.utils.book_new();
-
-    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
 
     const wsWeekly = XLSX.utils.json_to_sheet(weeklyData);
     XLSX.utils.book_append_sheet(wb, wsWeekly, 'Desglose Semanal');

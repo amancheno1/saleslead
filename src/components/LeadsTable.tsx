@@ -86,6 +86,22 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
   };
 
   const exportToExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const infoData = [
+      ['Sistema de Gestión de Leads'],
+      [''],
+      ['Propiedad de:', 'Alejandro Mancheño Rey'],
+      ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')],
+      ['Periodo:', viewMode === 'monthly' ? `${getMonthName(selectedMonth)} ${selectedYear}` : 'Total'],
+      ['Total de Leads:', filteredLeads.length],
+      [''],
+      ['© ' + new Date().getFullYear() + ' Alejandro Mancheño Rey. Todos los derechos reservados.']
+    ];
+
+    const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Información');
+
     const leadsToExport = filteredLeads.map(lead => {
       const commissions = calculateCommissions(lead);
       return {
@@ -107,13 +123,83 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
       };
     });
 
-    const ws = XLSX.utils.json_to_sheet(leadsToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+    const wsLeads = XLSX.utils.json_to_sheet(leadsToExport);
+    XLSX.utils.book_append_sheet(wb, wsLeads, 'Todos los Leads');
+
+    const monthlyData: { [key: string]: {
+      month: string;
+      leads: number;
+      sales: number;
+      totalRevenue: number;
+      totalCash: number;
+      setterCommissions: number;
+      closerCommissions: number;
+    }} = {};
+
+    filteredLeads.forEach(lead => {
+      const entryDate = new Date(lead.entry_date);
+      const monthKey = `${getMonthName(entryDate.getMonth())} ${entryDate.getFullYear()}`;
+
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = {
+          month: monthKey,
+          leads: 0,
+          sales: 0,
+          totalRevenue: 0,
+          totalCash: 0,
+          setterCommissions: 0,
+          closerCommissions: 0
+        };
+      }
+
+      const commissions = calculateCommissions(lead);
+      monthlyData[monthKey].leads++;
+      if (lead.sale_made) monthlyData[monthKey].sales++;
+      monthlyData[monthKey].totalRevenue += lead.sale_amount || 0;
+      monthlyData[monthKey].totalCash += lead.cash_collected || 0;
+      monthlyData[monthKey].setterCommissions += commissions.setterCommissionCash;
+      monthlyData[monthKey].closerCommissions += commissions.closerCommission;
+    });
+
+    const billingReport = Object.values(monthlyData).map(data => ({
+      'Mes': data.month,
+      'Total Leads': data.leads,
+      'Ventas Cerradas': data.sales,
+      'Tasa de Cierre (%)': data.leads > 0 ? ((data.sales / data.leads) * 100).toFixed(2) : '0.00',
+      'Facturación Total': data.totalRevenue.toFixed(2),
+      'Cash Collected': data.totalCash.toFixed(2),
+      'Comisiones Setter': data.setterCommissions.toFixed(2),
+      'Comisiones Closer': data.closerCommissions.toFixed(2),
+      'Total Comisiones': (data.setterCommissions + data.closerCommissions).toFixed(2)
+    }));
+
+    const wsBilling = XLSX.utils.json_to_sheet(billingReport);
+    XLSX.utils.book_append_sheet(wb, wsBilling, 'Informe de Facturación');
+
+    const commissionsReport = filteredLeads
+      .filter(lead => lead.sale_made)
+      .map(lead => {
+        const commissions = calculateCommissions(lead);
+        const entryDate = new Date(lead.entry_date);
+        return {
+          'Mes': `${getMonthName(entryDate.getMonth())} ${entryDate.getFullYear()}`,
+          'Cliente': `${lead.first_name} ${lead.last_name}`,
+          'Fecha Venta': new Date(lead.entry_date).toLocaleDateString('es-ES'),
+          'Importe Venta': lead.sale_amount || 0,
+          'Cash Collected': lead.cash_collected || 0,
+          'Comisión Setter': commissions.setterCommissionCash.toFixed(2),
+          'Comisión Closer': commissions.closerCommission.toFixed(2),
+          'Closer': lead.closer || '',
+          'Método Pago': lead.payment_method || ''
+        };
+      });
+
+    const wsCommissions = XLSX.utils.json_to_sheet(commissionsReport);
+    XLSX.utils.book_append_sheet(wb, wsCommissions, 'Comisiones por Mes');
 
     const fileName = viewMode === 'monthly'
-      ? `Leads_${getMonthName(selectedMonth)}_${selectedYear}.xlsx`
-      : `Leads_Total_${new Date().toLocaleDateString('es-ES')}.xlsx`;
+      ? `Informe_Completo_${getMonthName(selectedMonth)}_${selectedYear}.xlsx`
+      : `Informe_Completo_Total_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
   };
