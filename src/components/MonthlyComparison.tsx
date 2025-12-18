@@ -229,11 +229,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
 
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="text-center mb-2">
+                    <div className="text-center mb-4">
                       <p className="text-lg font-bold text-gray-900">{totalLeads}</p>
                       <p className="text-xs text-gray-500">total</p>
                     </div>
-                    <div className="w-full flex gap-1 items-end justify-center" style={{ height: '240px' }}>
+                    <div className="w-full flex gap-1 items-end justify-center" style={{ height: '220px' }}>
                       <div className="relative flex flex-col justify-end w-1/2 h-full">
                         <div
                           className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500 hover:from-blue-600 hover:to-blue-500 shadow-lg relative group"
@@ -308,11 +308,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
 
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="text-center mb-2">
+                  <div className="text-center mb-4">
                     <p className="text-lg font-bold text-gray-900">{totalLeads}</p>
                     <p className="text-xs text-gray-500">total</p>
                   </div>
-                  <div className="w-full flex gap-1 items-end justify-center" style={{ height: '240px' }}>
+                  <div className="w-full flex gap-1 items-end justify-center" style={{ height: '220px' }}>
                     <div className="relative flex flex-col justify-end w-1/2 h-full">
                       <div
                         className="w-full bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg transition-all duration-500 hover:from-purple-600 hover:to-purple-500 shadow-lg relative group"
@@ -384,11 +384,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
 
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="text-center mb-2">
+                  <div className="text-center mb-4">
                     <p className="text-base font-bold text-gray-900">${data.revenue.toFixed(0)}</p>
                     <p className="text-xs text-gray-500">facturado</p>
                   </div>
-                  <div className="relative flex flex-col justify-end w-full h-full" style={{ height: '240px' }}>
+                  <div className="relative flex flex-col justify-end w-full h-full" style={{ height: '220px' }}>
                     <div
                       className="w-full bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg transition-all duration-500 hover:from-green-700 hover:to-green-500 shadow-lg relative group"
                       style={{ height: `${revenuePercentage}%`, minHeight: data.revenue > 0 ? '20px' : '0' }}
