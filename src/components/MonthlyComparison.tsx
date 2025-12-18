@@ -289,7 +289,7 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-8">
           <div className="p-3 bg-purple-50 rounded-lg">
             <Database className="text-purple-600" size={24} />
           </div>
@@ -300,7 +300,7 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
         </div>
 
         <div className="space-y-6">
-          <div className="flex items-end justify-around gap-4 h-80 pb-4">
+          <div className="flex items-end justify-around gap-4 h-80 pb-4 pt-8">
             {monthlyData.map((data, index) => {
               const totalLeads = data.manualLeads + data.metaLeads;
               const metaPercentage = totalLeads > 0 ? (data.metaLeads / maxMonthlyLeads) * 100 : 0;
@@ -308,11 +308,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
 
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="text-center mb-4">
-                    <p className="text-lg font-bold text-gray-900">{totalLeads}</p>
+                  <div className="text-center mb-2">
+                    <p className="text-base font-bold text-gray-900">{totalLeads}</p>
                     <p className="text-xs text-gray-500">total</p>
                   </div>
-                  <div className="w-full flex gap-1 items-end justify-center" style={{ height: '220px' }}>
+                  <div className="w-full flex gap-1 items-end justify-center" style={{ height: '200px' }}>
                     <div className="relative flex flex-col justify-end w-1/2 h-full">
                       <div
                         className="w-full bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg transition-all duration-500 hover:from-purple-600 hover:to-purple-500 shadow-lg relative group"
@@ -367,7 +367,7 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-8">
           <div className="p-3 bg-green-50 rounded-lg">
             <TrendingUp className="text-green-600" size={24} />
           </div>
@@ -378,17 +378,17 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
         </div>
 
         <div className="space-y-6">
-          <div className="flex items-end justify-around gap-4 h-80 pb-4">
+          <div className="flex items-end justify-around gap-4 h-80 pb-4 pt-8">
             {monthlyData.map((data, index) => {
               const revenuePercentage = data.revenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
 
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="text-center mb-4">
-                    <p className="text-base font-bold text-gray-900">${data.revenue.toFixed(0)}</p>
+                  <div className="text-center mb-2">
+                    <p className="text-sm font-bold text-gray-900">${data.revenue.toFixed(0)}</p>
                     <p className="text-xs text-gray-500">facturado</p>
                   </div>
-                  <div className="relative flex flex-col justify-end w-full h-full" style={{ height: '220px' }}>
+                  <div className="relative flex flex-col justify-end w-full h-full" style={{ height: '200px' }}>
                     <div
                       className="w-full bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg transition-all duration-500 hover:from-green-700 hover:to-green-500 shadow-lg relative group"
                       style={{ height: `${revenuePercentage}%`, minHeight: data.revenue > 0 ? '20px' : '0' }}
