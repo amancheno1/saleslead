@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Plus, Trash2, Edit2, Users, Key, Copy, Check, Settings as SettingsIcon, Building2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Users, Key, Copy, Check, Settings as SettingsIcon, Building2, BarChart3, TrendingUp, Target, DollarSign } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -18,6 +18,7 @@ interface ProjectMember {
   email: string;
   full_name: string | null;
   role: string;
+  project_id: string | null;
   created_at: string;
 }
 
@@ -32,16 +33,29 @@ interface Invitation {
   project_name?: string;
 }
 
+interface ProjectStats {
+  project_id: string;
+  project_name: string;
+  total_leads: number;
+  pending_leads: number;
+  contacted_leads: number;
+  converted_leads: number;
+  total_revenue: number;
+  members_count: number;
+}
+
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [projectStats, setProjectStats] = useState<ProjectStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'projects' | 'members' | 'invitations'>('projects');
+  const [activeTab, setActiveTab] = useState<'statistics' | 'projects' | 'members' | 'invitations'>('statistics');
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreateInvitation, setShowCreateInvitation] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingMember, setEditingMember] = useState<ProjectMember | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const [newProject, setNewProject] = useState({
@@ -66,7 +80,9 @@ export default function AdminDashboard() {
 
     setLoading(true);
     try {
-      if (activeTab === 'projects') {
+      if (activeTab === 'statistics') {
+        await loadStatistics();
+      } else if (activeTab === 'projects') {
         await loadProjects();
       } else if (activeTab === 'members') {
         await loadMembers();
@@ -76,6 +92,54 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadStatistics = async () => {
+    if (profile?.role !== 'super_admin') return;
+
+    const { data: projectsData } = await supabase
+      .from('projects')
+      .select('id, name')
+      .eq('is_active', true);
+
+    if (!projectsData) return;
+
+    const stats: ProjectStats[] = [];
+
+    for (const project of projectsData) {
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('status, sale_amount, first_installment_amount')
+        .eq('project_id', project.id);
+
+      const { count: membersCount } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
+
+      const totalLeads = leads?.length || 0;
+      const pendingLeads = leads?.filter(l => l.status === 'pending').length || 0;
+      const contactedLeads = leads?.filter(l => l.status === 'contacted').length || 0;
+      const convertedLeads = leads?.filter(l => l.status === 'converted').length || 0;
+      const totalRevenue = leads?.reduce((sum, l) => {
+        const saleAmount = parseFloat(l.sale_amount || '0');
+        const firstInstallment = parseFloat(l.first_installment_amount || '0');
+        return sum + saleAmount + firstInstallment;
+      }, 0) || 0;
+
+      stats.push({
+        project_id: project.id,
+        project_name: project.name,
+        total_leads: totalLeads,
+        pending_leads: pendingLeads,
+        contacted_leads: contactedLeads,
+        converted_leads: convertedLeads,
+        total_revenue: totalRevenue,
+        members_count: membersCount || 0
+      });
+    }
+
+    setProjectStats(stats);
   };
 
   const loadProjects = async () => {
@@ -259,6 +323,46 @@ export default function AdminDashboard() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleUpdateMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        role: editingMember.role,
+        project_id: editingMember.project_id,
+        full_name: editingMember.full_name
+      })
+      .eq('id', editingMember.id);
+
+    if (error) {
+      alert('Error al actualizar usuario: ' + error.message);
+      return;
+    }
+
+    setEditingMember(null);
+    loadMembers();
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .delete()
+      .eq('id', memberId);
+
+    if (error) {
+      alert('Error al eliminar usuario: ' + error.message);
+      return;
+    }
+
+    loadMembers();
+  };
+
   if (!profile || (profile.role !== 'super_admin' && profile.role !== 'project_admin')) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -279,6 +383,19 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
+            {profile?.role === 'super_admin' && (
+              <button
+                onClick={() => setActiveTab('statistics')}
+                className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
+                  activeTab === 'statistics'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <BarChart3 className="inline-block mr-2" size={18} />
+                Estadísticas
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('projects')}
               className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
@@ -316,6 +433,99 @@ export default function AdminDashboard() {
         </div>
 
         <div className="p-6">
+          {activeTab === 'statistics' && profile?.role === 'super_admin' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Estadísticas Globales</h2>
+
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-blue-100 text-sm font-semibold mb-1">Total Proyectos</p>
+                          <p className="text-3xl font-bold">{projectStats.length}</p>
+                        </div>
+                        <Building2 size={36} className="opacity-80" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-green-100 text-sm font-semibold mb-1">Total Leads</p>
+                          <p className="text-3xl font-bold">
+                            {projectStats.reduce((sum, p) => sum + p.total_leads, 0)}
+                          </p>
+                        </div>
+                        <TrendingUp size={36} className="opacity-80" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-purple-100 text-sm font-semibold mb-1">Convertidos</p>
+                          <p className="text-3xl font-bold">
+                            {projectStats.reduce((sum, p) => sum + p.converted_leads, 0)}
+                          </p>
+                        </div>
+                        <Target size={36} className="opacity-80" />
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-orange-100 text-sm font-semibold mb-1">Ingresos Totales</p>
+                          <p className="text-3xl font-bold">
+                            ${projectStats.reduce((sum, p) => sum + p.total_revenue, 0).toLocaleString()}
+                          </p>
+                        </div>
+                        <DollarSign size={36} className="opacity-80" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {projectStats.map((stat) => (
+                      <div key={stat.project_id} className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4">{stat.project_name}</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-sm text-gray-600 font-semibold mb-1">Total Leads</p>
+                            <p className="text-2xl font-bold text-gray-900">{stat.total_leads}</p>
+                          </div>
+                          <div className="bg-yellow-50 rounded-lg p-4">
+                            <p className="text-sm text-yellow-700 font-semibold mb-1">Pendientes</p>
+                            <p className="text-2xl font-bold text-yellow-900">{stat.pending_leads}</p>
+                          </div>
+                          <div className="bg-blue-50 rounded-lg p-4">
+                            <p className="text-sm text-blue-700 font-semibold mb-1">Contactados</p>
+                            <p className="text-2xl font-bold text-blue-900">{stat.contacted_leads}</p>
+                          </div>
+                          <div className="bg-green-50 rounded-lg p-4">
+                            <p className="text-sm text-green-700 font-semibold mb-1">Convertidos</p>
+                            <p className="text-2xl font-bold text-green-900">{stat.converted_leads}</p>
+                          </div>
+                          <div className="bg-purple-50 rounded-lg p-4">
+                            <p className="text-sm text-purple-700 font-semibold mb-1">Usuarios</p>
+                            <p className="text-2xl font-bold text-purple-900">{stat.members_count}</p>
+                          </div>
+                          <div className="bg-orange-50 rounded-lg p-4">
+                            <p className="text-sm text-orange-700 font-semibold mb-1">Ingresos</p>
+                            <p className="text-2xl font-bold text-orange-900">${stat.total_revenue.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {activeTab === 'projects' && (
             <div>
               <div className="flex justify-between items-center mb-6">
@@ -498,7 +708,84 @@ export default function AdminDashboard() {
 
           {activeTab === 'members' && (
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Usuarios</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Gestión de Usuarios</h2>
+
+              {editingMember && (
+                <form onSubmit={handleUpdateMember} className="bg-gray-50 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Editar Usuario</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={editingMember.email}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo</label>
+                      <input
+                        type="text"
+                        value={editingMember.full_name || ''}
+                        onChange={(e) => setEditingMember({ ...editingMember, full_name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    {profile?.role === 'super_admin' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Rol</label>
+                          <select
+                            value={editingMember.role}
+                            onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="member">Miembro</option>
+                            <option value="project_admin">Admin Proyecto</option>
+                            <option value="super_admin">Super Admin</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Proyecto Asignado</label>
+                          <select
+                            value={editingMember.project_id || ''}
+                            onChange={(e) => setEditingMember({ ...editingMember, project_id: e.target.value || null })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            disabled={editingMember.role === 'super_admin'}
+                          >
+                            <option value="">Sin proyecto</option>
+                            {projects.filter(p => p.is_active).map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          </select>
+                          {editingMember.role === 'super_admin' && (
+                            <p className="text-sm text-gray-600 mt-1">Los super admins no necesitan proyecto asignado</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingMember(null)}
+                        className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -506,19 +793,23 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nombre</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Rol</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha de Registro</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Proyecto</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha</th>
+                      {profile?.role === 'super_admin' && (
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {loading ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-8">
+                        <td colSpan={profile?.role === 'super_admin' ? 6 : 5} className="text-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                         </td>
                       </tr>
                     ) : members.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-8 text-gray-500">
+                        <td colSpan={profile?.role === 'super_admin' ? 6 : 5} className="text-center py-8 text-gray-500">
                           No hay usuarios
                         </td>
                       </tr>
@@ -537,9 +828,37 @@ export default function AdminDashboard() {
                                member.role === 'project_admin' ? 'Admin Proyecto' : 'Miembro'}
                             </span>
                           </td>
+                          <td className="px-4 py-4 text-sm text-gray-600">
+                            {member.project_id ? projects.find(p => p.id === member.project_id)?.name || '-' : '-'}
+                          </td>
                           <td className="px-4 py-4 text-sm text-gray-500">
                             {new Date(member.created_at).toLocaleDateString()}
                           </td>
+                          {profile?.role === 'super_admin' && (
+                            <td className="px-4 py-4 text-sm">
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingMember(member);
+                                    loadProjects();
+                                  }}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="Editar"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                                {member.id !== profile.id && (
+                                  <button
+                                    onClick={() => handleDeleteMember(member.id)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Eliminar"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))
                     )}

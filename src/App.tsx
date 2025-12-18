@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, Shield } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
@@ -12,6 +12,7 @@ import Commissions from './components/Commissions';
 import MetaLeads from './components/MetaLeads';
 import AdminDashboard from './components/AdminDashboard';
 import ProjectSelector from './components/ProjectSelector';
+import SuperAdminSetup from './components/SuperAdminSetup';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -25,6 +26,14 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingLead, setEditingLead] = useState<Lead | undefined>(undefined);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSuperAdminSetup, setShowSuperAdminSetup] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('setup') === 'super-admin') {
+      setShowSuperAdminSetup(true);
+    }
+  }, []);
 
   const handleFormSuccess = () => {
     setCurrentView('leads');
@@ -87,6 +96,10 @@ function App() {
 
   if (!user) {
     return <Auth />;
+  }
+
+  if (showSuperAdminSetup && user) {
+    return <SuperAdminSetup />;
   }
 
   if (projectLoading) {
