@@ -60,25 +60,35 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const createProject = async (name: string, description?: string, weeklyGoal: number = 50) => {
     if (!user) throw new Error('User not authenticated');
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([{
-        user_id: user.id,
-        name,
-        description: description || null,
-        weekly_goal: weeklyGoal
-      }])
-      .select()
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          user_id: user.id,
+          name,
+          description: description || null,
+          weekly_goal: weeklyGoal
+        }])
+        .select()
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error creating project:', error);
-      throw error;
-    }
+      if (error) {
+        console.error('Error creating project:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        throw new Error(`Error al crear proyecto: ${error.message}`);
+      }
 
-    await refreshProjects();
-    if (data) {
+      if (!data) {
+        throw new Error('No se recibieron datos del proyecto creado');
+      }
+
+      await refreshProjects();
       setCurrentProject(data);
+
+      return data;
+    } catch (error: any) {
+      console.error('Exception in createProject:', error);
+      throw error;
     }
   };
 

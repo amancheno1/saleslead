@@ -22,9 +22,10 @@ export default function ProjectSelector() {
       setNewProjectGoal(50);
       setShowNewProject(false);
       setShowDropdown(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating project:', error);
-      alert('Error al crear el proyecto');
+      const errorMessage = error?.message || 'Error desconocido al crear el proyecto';
+      alert(`Error al crear el proyecto:\n\n${errorMessage}\n\nRevisa la consola del navegador para más detalles.`);
     } finally {
       setLoading(false);
     }
