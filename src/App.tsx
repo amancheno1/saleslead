@@ -187,12 +187,14 @@ function App() {
                 view="team"
                 active={currentView === 'team'}
               />
-              <NavButton
-                icon={SettingsIcon}
-                label="Configuración"
-                view="settings"
-                active={currentView === 'settings'}
-              />
+              {user?.email === 'amancheno1979@gmail.com' && (
+                <NavButton
+                  icon={SettingsIcon}
+                  label="Configuración"
+                  view="settings"
+                  active={currentView === 'settings'}
+                />
+              )}
             </nav>
 
             <div className="mt-8 pt-6 border-t-2 border-gray-100">

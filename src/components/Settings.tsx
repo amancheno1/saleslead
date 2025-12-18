@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, Trash2, Key } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
+import InvitationCodes from './InvitationCodes';
 
 interface SettingsProps {
   onUpdate: () => void;
@@ -66,7 +67,21 @@ export default function Settings({ onUpdate }: SettingsProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="p-4 bg-white/20 backdrop-blur-sm rounded-xl">
+            <Key className="text-white" size={32} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black mb-1">Códigos de Invitación</h2>
+            <p className="text-blue-100 font-medium">Invita nuevos miembros a tu equipo usando códigos seguros</p>
+          </div>
+        </div>
+      </div>
+
+      <InvitationCodes />
+
       <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-gray-100">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 bg-blue-50 rounded-lg">
