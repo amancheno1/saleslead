@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Shield, UserMinus, Crown, User } from 'lucide-react';
+import { Users, Shield, UserMinus, Crown, User, Trash2, Edit2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import type { Database } from '../lib/database.types';
@@ -13,6 +13,9 @@ export default function ProjectMembers() {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<ProjectMember | null>(null);
+  const [newEmail, setNewEmail] = useState('');
 
   useEffect(() => {
     getCurrentUser();
@@ -24,6 +27,17 @@ export default function ProjectMembers() {
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
+
+    if (user && currentProject) {
+      const { data: memberData } = await supabase
+        .from('project_members')
+        .select('role')
+        .eq('project_id', currentProject.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setCurrentUserRole(memberData?.role || null);
+    }
   };
 
   const fetchMembers = async () => {
@@ -43,7 +57,7 @@ export default function ProjectMembers() {
           const { data: userData } = await supabase.auth.admin.getUserById(member.user_id);
           return {
             ...member,
-            user_email: userData.user?.email || 'Email no disponible'
+            user_email: userData.user?.email || member.email || 'Email no disponible'
           };
         })
       );
@@ -56,8 +70,8 @@ export default function ProjectMembers() {
     }
   };
 
-  const handleUpdateRole = async (memberId: string, newRole: 'admin' | 'member') => {
-    if (!confirm(`¿Cambiar el rol de este miembro a ${newRole === 'admin' ? 'Administrador' : 'Miembro'}?`)) return;
+  const handleUpdateRole = async (memberId: string, newRole: 'admin' | 'member' | 'owner') => {
+    if (!confirm(`¿Cambiar el rol de este miembro a ${newRole === 'owner' ? 'Propietario' : newRole === 'admin' ? 'Administrador' : 'Miembro'}?`)) return;
 
     try {
       const { error } = await supabase
@@ -69,6 +83,33 @@ export default function ProjectMembers() {
       fetchMembers();
     } catch (error: any) {
       alert('Error al actualizar rol: ' + error.message);
+    }
+  };
+
+  const handleEditProfile = (member: ProjectMember) => {
+    setEditingMember(member);
+    setNewEmail(member.user_email || '');
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!editingMember || !newEmail) return;
+
+    if (!confirm('¿Estás seguro de que quieres actualizar el email de este usuario?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .update({ email: newEmail })
+        .eq('id', editingMember.id);
+
+      if (error) throw error;
+
+      alert('Email actualizado. El usuario deberá iniciar sesión con el nuevo email.');
+      setEditingMember(null);
+      setNewEmail('');
+      fetchMembers();
+    } catch (error: any) {
+      alert('Error al actualizar email: ' + error.message);
     }
   };
 
@@ -92,6 +133,33 @@ export default function ProjectMembers() {
       alert('Error al eliminar miembro: ' + error.message);
     }
   };
+
+  const handleDeleteUserAccount = async (userId: string, memberRole: string) => {
+    if (memberRole === 'owner') {
+      alert('No puedes eliminar la cuenta del propietario');
+      return;
+    }
+
+    if (userId === currentUserId) {
+      alert('No puedes eliminar tu propia cuenta desde aquí');
+      return;
+    }
+
+    if (!confirm('⚠️ ADVERTENCIA: Esto eliminará permanentemente la cuenta del usuario y todos sus datos. ¿Estás seguro?')) return;
+
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) throw error;
+
+      alert('Cuenta de usuario eliminada permanentemente');
+      fetchMembers();
+    } catch (error: any) {
+      alert('Error al eliminar cuenta: ' + error.message);
+    }
+  };
+
+  const canManageMembers = currentUserRole === 'owner' || currentUserRole === 'admin';
 
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Cargando miembros...</div>;
@@ -200,15 +268,15 @@ export default function ProjectMembers() {
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {!isOwner && (
-                          <div className="flex items-center gap-2">
+                        {canManageMembers && !isOwner && (
+                          <div className="flex flex-wrap items-center gap-2">
                             {member.role === 'member' ? (
                               <button
                                 onClick={() => handleUpdateRole(member.id, 'admin')}
                                 className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-medium text-xs flex items-center gap-1"
                               >
                                 <Shield size={14} />
-                                Promover a Admin
+                                Promover
                               </button>
                             ) : (
                               <button
@@ -216,20 +284,43 @@ export default function ProjectMembers() {
                                 className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-medium text-xs flex items-center gap-1"
                               >
                                 <User size={14} />
-                                Degradar a Miembro
+                                Degradar
                               </button>
                             )}
                             <button
+                              onClick={() => handleEditProfile(member)}
+                              className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors font-medium text-xs flex items-center gap-1"
+                            >
+                              <Edit2 size={14} />
+                              Editar
+                            </button>
+                            <button
                               onClick={() => handleRemoveMember(member.id, member.role)}
-                              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium text-xs flex items-center gap-1"
+                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors font-medium text-xs flex items-center gap-1"
                             >
                               <UserMinus size={14} />
-                              Eliminar
+                              Quitar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUserAccount(member.user_id, member.role)}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium text-xs flex items-center gap-1"
+                            >
+                              <Trash2 size={14} />
+                              Borrar
                             </button>
                           </div>
                         )}
-                        {isOwner && (
-                          <span className="text-gray-500 text-xs italic">Propietario del proyecto</span>
+                        {canManageMembers && isOwner && (
+                          <button
+                            onClick={() => handleEditProfile(member)}
+                            className="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors font-medium text-xs flex items-center gap-1"
+                          >
+                            <Edit2 size={14} />
+                            Editar
+                          </button>
+                        )}
+                        {!canManageMembers && (
+                          <span className="text-gray-500 text-xs italic">Sin permisos</span>
                         )}
                       </td>
                     </tr>
@@ -240,6 +331,48 @@ export default function ProjectMembers() {
           </div>
         )}
       </div>
+
+      {editingMember && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Editar Perfil</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="nuevo@email.com"
+                />
+              </div>
+              <p className="text-sm text-gray-600">
+                Nota: El cambio de email requerirá que el usuario inicie sesión nuevamente.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleUpdateEmail}
+                  className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  Actualizar
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingMember(null);
+                    setNewEmail('');
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="text-sm font-semibold text-blue-900 mb-2">Roles y Permisos</h3>

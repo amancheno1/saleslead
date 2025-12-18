@@ -5,15 +5,13 @@ import type { Database } from '../lib/database.types';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 
+const SINGLE_PROJECT_NAME = 'Amz Kickstart by Pol Brullas';
+
 interface ProjectContextType {
   currentProject: Project | null;
-  projects: Project[];
   loading: boolean;
-  setCurrentProject: (project: Project | null) => void;
-  createProject: (name: string, description?: string, weeklyGoal?: number) => Promise<void>;
-  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
-  deleteProject: (id: string) => Promise<void>;
-  refreshProjects: () => Promise<void>;
+  updateProject: (updates: Partial<Project>) => Promise<void>;
+  refreshProject: () => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -21,120 +19,60 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      fetchProjects();
+      fetchSingleProject();
     } else {
-      setProjects([]);
       setCurrentProject(null);
       setLoading(false);
     }
   }, [user]);
 
-  const fetchProjects = async () => {
+  const fetchSingleProject = async () => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('name', SINGLE_PROJECT_NAME)
+        .maybeSingle();
 
       if (error) throw error;
 
-      setProjects(data || []);
-
-      if (data && data.length > 0 && !currentProject) {
-        setCurrentProject(data[0]);
-      }
+      setCurrentProject(data);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error('Error fetching project:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const createProject = async (name: string, description?: string, weeklyGoal: number = 50) => {
-    if (!user) throw new Error('User not authenticated');
+  const updateProject = async (updates: Partial<Project>) => {
+    if (!currentProject) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([{
-          user_id: user.id,
-          name,
-          description: description || null,
-          weekly_goal: weeklyGoal
-        }])
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error creating project:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
-        throw new Error(`Error al crear proyecto: ${error.message}`);
-      }
-
-      if (!data) {
-        throw new Error('No se recibieron datos del proyecto creado');
-      }
-
-      await refreshProjects();
-      setCurrentProject(data);
-
-      return data;
-    } catch (error: any) {
-      console.error('Exception in createProject:', error);
-      throw error;
-    }
-  };
-
-  const updateProject = async (id: string, updates: Partial<Project>) => {
     const { error } = await supabase
       .from('projects')
       .update(updates)
-      .eq('id', id);
-
-    if (error) throw error;
-    await refreshProjects();
-
-    if (currentProject?.id === id) {
-      setCurrentProject({ ...currentProject, ...updates } as Project);
-    }
-  };
-
-  const deleteProject = async (id: string) => {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id);
+      .eq('id', currentProject.id);
 
     if (error) throw error;
 
-    if (currentProject?.id === id) {
-      setCurrentProject(null);
-    }
-
-    await refreshProjects();
+    setCurrentProject({ ...currentProject, ...updates } as Project);
   };
 
-  const refreshProjects = async () => {
-    await fetchProjects();
+  const refreshProject = async () => {
+    await fetchSingleProject();
   };
 
   return (
     <ProjectContext.Provider value={{
       currentProject,
-      projects,
       loading,
-      setCurrentProject,
-      createProject,
       updateProject,
-      deleteProject,
-      refreshProjects
+      refreshProject
     }}>
       {children}
     </ProjectContext.Provider>

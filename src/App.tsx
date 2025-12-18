@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, UserCog } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -11,12 +11,11 @@ import Billing from './components/Billing';
 import Commissions from './components/Commissions';
 import MetaLeads from './components/MetaLeads';
 import AdminDashboard from './components/AdminDashboard';
-import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
-type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'admin';
+type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'team';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -107,9 +106,8 @@ function App() {
           <div className="p-4 bg-blue-600 rounded-full inline-block mb-4">
             <LayoutDashboard className="text-white" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Lead Tracker</h2>
-          <p className="text-gray-600 mb-6">Crea tu primer proyecto para comenzar a gestionar tus leads</p>
-          <ProjectSelector />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Amz Kickstart</h2>
+          <p className="text-gray-600 mb-6">El sistema se está configurando. Por favor, espera un momento...</p>
           <button
             onClick={handleSignOut}
             className="mt-4 text-sm text-gray-600 hover:text-gray-900"
@@ -134,8 +132,8 @@ function App() {
                   <LayoutDashboard className="text-white" size={28} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-gray-900 tracking-tight">Lead Tracker</h1>
-                  <p className="text-xs text-gray-600 font-semibold">Sistema de Ventas</p>
+                  <h1 className="text-lg font-black text-gray-900 tracking-tight leading-tight">Amz Kickstart</h1>
+                  <p className="text-xs text-gray-600 font-semibold">by Pol Brullas</p>
                 </div>
               </div>
               <button
@@ -144,10 +142,6 @@ function App() {
               >
                 <X size={24} />
               </button>
-            </div>
-
-            <div className="mb-4">
-              <ProjectSelector />
             </div>
 
             <nav className="space-y-2">
@@ -188,10 +182,10 @@ function App() {
                 active={currentView === 'meta-leads'}
               />
               <NavButton
-                icon={Building2}
-                label="Proyectos"
-                view="admin"
-                active={currentView === 'admin'}
+                icon={UserCog}
+                label="Equipo"
+                view="team"
+                active={currentView === 'team'}
               />
               <NavButton
                 icon={SettingsIcon}
@@ -235,7 +229,7 @@ function App() {
               {currentView === 'billing' && 'Facturación'}
               {currentView === 'commissions' && 'Comisiones'}
               {currentView === 'meta-leads' && 'Leads Meta'}
-              {currentView === 'admin' && 'Proyectos'}
+              {currentView === 'team' && 'Equipo'}
               {currentView === 'settings' && 'Configuración'}
             </h2>
             <div className="w-6" />
@@ -305,7 +299,7 @@ function App() {
                 </div>
               )}
 
-              {currentView === 'admin' && <AdminDashboard />}
+              {currentView === 'team' && <AdminDashboard />}
 
               {currentView === 'settings' && (
                 <div>
