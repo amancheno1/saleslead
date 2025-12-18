@@ -69,9 +69,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         weekly_goal: weeklyGoal
       }])
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating project:', error);
+      throw error;
+    }
 
     await refreshProjects();
     if (data) {

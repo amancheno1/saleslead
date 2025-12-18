@@ -41,10 +41,12 @@ export default function ProjectMembers() {
         .from('projects')
         .select('user_id')
         .eq('id', currentProject.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setProjectOwnerId(data.user_id);
+      if (data) {
+        setProjectOwnerId(data.user_id);
+      }
     } catch (error) {
       console.error('Error fetching project owner:', error);
     }
