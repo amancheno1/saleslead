@@ -16,11 +16,22 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
   const { user } = useAuth();
   const { currentProject } = useProject();
   const [loading, setLoading] = useState(false);
+
+  const getDefaultDate = () => {
+    const today = new Date();
+    const minDate = new Date('2025-01-01');
+    const maxDate = new Date('2030-12-31');
+
+    if (today < minDate) return '2025-01-01';
+    if (today > maxDate) return '2030-12-31';
+    return today.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState<Lead>({
     first_name: editLead?.first_name || '',
     last_name: editLead?.last_name || '',
     form_type: editLead?.form_type || 'guía',
-    entry_date: editLead?.entry_date || new Date().toISOString().split('T')[0],
+    entry_date: editLead?.entry_date || getDefaultDate(),
     contact_date: editLead?.contact_date || null,
     scheduled_call_date: editLead?.scheduled_call_date || null,
     attended_meeting: editLead?.attended_meeting ?? null,
@@ -117,6 +128,8 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
           <input
             type="date"
             required
+            min="2025-01-01"
+            max="2030-12-31"
             value={formData.entry_date}
             onChange={(e) => setFormData({ ...formData, entry_date: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -129,6 +142,8 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
           </label>
           <input
             type="date"
+            min="2025-01-01"
+            max="2030-12-31"
             value={formData.contact_date || ''}
             onChange={(e) => setFormData({ ...formData, contact_date: e.target.value || null })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -141,6 +156,8 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
           </label>
           <input
             type="date"
+            min="2025-01-01"
+            max="2030-12-31"
             value={formData.scheduled_call_date || ''}
             onChange={(e) => setFormData({ ...formData, scheduled_call_date: e.target.value || null })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
