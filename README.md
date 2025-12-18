@@ -66,12 +66,42 @@ npm run build
 
 Este proyecto está configurado para desplegarse en Netlify.
 
-### Configuración en Netlify
+### Paso 1: Preparar el Repositorio Git
+
+1. **Inicializar Git (si no lo has hecho)**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+
+2. **Configurar clave SSH de deploy**
+
+   Agrega esta clave SSH pública a tu cuenta de GitHub/GitLab/Bitbucket para permitir despliegues:
+
+   - **GitHub**: Settings > SSH and GPG keys > New SSH key
+   - **GitLab**: Preferences > SSH Keys
+   - **Bitbucket**: Personal settings > SSH keys
+
+   Clave pública de deploy:
+   ```
+   ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDqJVUMbjioZqzmR3mK7R8PaIwvPO1ZC0tU11fJkBUYIuE3snJHbTEGDpXCznvamyvfccwRP/bLQCYrsIce2m0ahbix4gr/+G+1SiBx9Lf2mSy5zVIU4N3i7XSPBKbHvtBei4UBmhTPUXCxjHNxstxg1E81vr+/RTa8SGAVzxJw85LUaQyss96WCFTcJsHH9Y4rwc02YBBa5dwjiO+CJH7lfgz6hPHyT7Aw3ISfiHF4/bT1haWrk3H/A0LsEyJnZ0xnh5yc/vouUuYwbybQ95hx5q5eH43wcE0/pE1lHWSQ8HrGvEhSGGzxDlByPVlVPXXwHORcbnE0E6BaxsZyDWBhmXMuSLkXmw2E6dMEx49PD8gcNnF+gO9IxwNf54xzsjgIHsCd20s82JvvGjCl2/SNth3UEqgwFvsaD51qRRI8KMgP2ZzY25anOLrS4Yuk/e/oCssLFPa1N5O5SUsBiZR2gzxb2fxvL7/yqI6LuWxI2KSjRlAuxP4OvMQ7JUNM9VTxTY2KYvXptXXhVjhOZLZA49i11OwaSszrr+A58TlhqrTn8vQONI3ABro7bAljLigPxiHrT0sMoS5Akciw0XxyyUxDPxkxlX7Deu5nZIZCGZzVoGmKsCUjsISpJTNLZSTA66eXWh5qIHcBkZ6RMbM2BomU/u+NPaRZhd9L3kJi0w==
+   ```
+
+3. **Subir a tu repositorio remoto**
+   ```bash
+   git remote add origin git@github.com:tu-usuario/tu-repositorio.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+### Paso 2: Configurar Netlify
 
 1. **Conectar tu repositorio**
    - Accede a [Netlify](https://app.netlify.com)
    - Crea un nuevo sitio desde Git
-   - Conecta tu repositorio
+   - Conecta tu repositorio (GitHub/GitLab/Bitbucket)
+   - Netlify detectará automáticamente el archivo `netlify.toml`
 
 2. **Configurar variables de entorno**
 
@@ -84,13 +114,28 @@ Este proyecto está configurado para desplegarse en Netlify.
 3. **Configuración de build**
 
    El archivo `netlify.toml` ya incluye la configuración necesaria:
-   - Build command: `npm run build`
+   - Build command: `npx vite build`
    - Publish directory: `dist`
    - Redirects para SPA configurados
+   - Node.js 18
 
 4. **Desplegar**
    - Netlify desplegará automáticamente al hacer push a tu rama principal
-   - También puedes desplegar manualmente desde el dashboard de Netlify
+   - También puedes desplegar manualmente arrastrando la carpeta `dist` al dashboard
+
+### Despliegue Manual (Alternativo)
+
+Si prefieres no usar Git:
+
+1. **Compilar el proyecto**
+   ```bash
+   npm run build
+   ```
+
+2. **Arrastrar carpeta dist**
+   - Ve a [Netlify Drop](https://app.netlify.com/drop)
+   - Arrastra la carpeta `dist` generada
+   - Configura las variables de entorno en Site settings
 
 ## Estructura de la Base de Datos
 
