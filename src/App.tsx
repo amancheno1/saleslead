@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, Shield } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -10,15 +10,16 @@ import Settings from './components/Settings';
 import Billing from './components/Billing';
 import Commissions from './components/Commissions';
 import MetaLeads from './components/MetaLeads';
+import AdminDashboard from './components/AdminDashboard';
 import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
-type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings';
+type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'admin';
 
 function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const { currentProject, loading: projectLoading } = useProject();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -186,6 +187,14 @@ function App() {
                 view="meta-leads"
                 active={currentView === 'meta-leads'}
               />
+              {(profile?.role === 'super_admin' || profile?.role === 'project_admin') && (
+                <NavButton
+                  icon={Shield}
+                  label="Administración"
+                  view="admin"
+                  active={currentView === 'admin'}
+                />
+              )}
               <NavButton
                 icon={SettingsIcon}
                 label="Configuración"
@@ -228,6 +237,7 @@ function App() {
               {currentView === 'billing' && 'Facturación'}
               {currentView === 'commissions' && 'Comisiones'}
               {currentView === 'meta-leads' && 'Leads Meta'}
+              {currentView === 'admin' && 'Administración'}
               {currentView === 'settings' && 'Configuración'}
             </h2>
             <div className="w-6" />
@@ -296,6 +306,8 @@ function App() {
                   <MetaLeads />
                 </div>
               )}
+
+              {currentView === 'admin' && <AdminDashboard />}
 
               {currentView === 'settings' && (
                 <div>
