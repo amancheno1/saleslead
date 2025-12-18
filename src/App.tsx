@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award } from 'lucide-react';
+import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -9,12 +9,13 @@ import LeadForm from './components/LeadForm';
 import Settings from './components/Settings';
 import Billing from './components/Billing';
 import Commissions from './components/Commissions';
+import MetaLeads from './components/MetaLeads';
 import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
-type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'settings';
+type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -180,6 +181,12 @@ function App() {
                 active={currentView === 'commissions'}
               />
               <NavButton
+                icon={DatabaseIcon}
+                label="Leads Meta"
+                view="meta-leads"
+                active={currentView === 'meta-leads'}
+              />
+              <NavButton
                 icon={SettingsIcon}
                 label="Configuración"
                 view="settings"
@@ -220,6 +227,7 @@ function App() {
               {currentView === 'add-lead' && (editingLead ? 'Editar Lead' : 'Agregar Lead')}
               {currentView === 'billing' && 'Facturación'}
               {currentView === 'commissions' && 'Comisiones'}
+              {currentView === 'meta-leads' && 'Leads Meta'}
               {currentView === 'settings' && 'Configuración'}
             </h2>
             <div className="w-6" />
@@ -276,6 +284,16 @@ function App() {
                     <p className="text-sm md:text-lg text-gray-600 font-medium">Cálculo de comisiones</p>
                   </div>
                   <Commissions refreshTrigger={refreshTrigger} />
+                </div>
+              )}
+
+              {currentView === 'meta-leads' && (
+                <div>
+                  <div className="mb-6 md:mb-8 hidden md:block">
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Leads de Meta</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Registro semanal de leads de formularios Meta</p>
+                  </div>
+                  <MetaLeads />
                 </div>
               )}
 

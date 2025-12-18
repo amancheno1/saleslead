@@ -123,6 +123,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      meta_leads: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          week_start_date: string
+          week_number: number
+          year: number
+          leads_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          week_start_date: string
+          week_number: number
+          year: number
+          leads_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          week_start_date?: string
+          week_number?: number
+          year?: number
+          leads_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
