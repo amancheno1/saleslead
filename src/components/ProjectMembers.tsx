@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, UserMinus, Crown, User } from 'lucide-react';
+import { Users, Shield, UserMinus, Crown, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import type { Database } from '../lib/database.types';
@@ -56,6 +56,21 @@ export default function ProjectMembers() {
     }
   };
 
+  const handleUpdateRole = async (memberId: string, newRole: 'admin' | 'member') => {
+    if (!confirm(`¿Cambiar el rol de este miembro a ${newRole === 'admin' ? 'Administrador' : 'Miembro'}?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) throw error;
+      fetchMembers();
+    } catch (error: any) {
+      alert('Error al actualizar rol: ' + error.message);
+    }
+  };
 
   const handleRemoveMember = async (memberId: string, memberRole: string) => {
     if (memberRole === 'owner') {
@@ -160,6 +175,13 @@ export default function ProjectMembers() {
                                 Propietario
                               </span>
                             </>
+                          ) : member.role === 'admin' ? (
+                            <>
+                              <Shield className="text-blue-600" size={18} />
+                              <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
+                                Administrador
+                              </span>
+                            </>
                           ) : (
                             <>
                               <User className="text-gray-600" size={18} />
@@ -178,15 +200,35 @@ export default function ProjectMembers() {
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {!isOwner ? (
-                          <button
-                            onClick={() => handleRemoveMember(member.id, member.role)}
-                            className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium text-xs flex items-center gap-1"
-                          >
-                            <UserMinus size={14} />
-                            Eliminar
-                          </button>
-                        ) : (
+                        {!isOwner && (
+                          <div className="flex items-center gap-2">
+                            {member.role === 'member' ? (
+                              <button
+                                onClick={() => handleUpdateRole(member.id, 'admin')}
+                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-medium text-xs flex items-center gap-1"
+                              >
+                                <Shield size={14} />
+                                Promover a Admin
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleUpdateRole(member.id, 'member')}
+                                className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-medium text-xs flex items-center gap-1"
+                              >
+                                <User size={14} />
+                                Degradar a Miembro
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRemoveMember(member.id, member.role)}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium text-xs flex items-center gap-1"
+                            >
+                              <UserMinus size={14} />
+                              Eliminar
+                            </button>
+                          </div>
+                        )}
+                        {isOwner && (
                           <span className="text-gray-500 text-xs italic">Propietario del proyecto</span>
                         )}
                       </td>
@@ -205,13 +247,19 @@ export default function ProjectMembers() {
           <div className="flex items-start gap-2">
             <Crown className="text-yellow-600 mt-0.5" size={16} />
             <div>
-              <strong>Propietario:</strong> Creador del proyecto con control total. Puede gestionar miembros, crear códigos de invitación, modificar configuraciones y eliminar el proyecto.
+              <strong>Propietario:</strong> Creador del proyecto con control total. No puede ser eliminado ni degradado.
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <Shield className="text-blue-600 mt-0.5" size={16} />
+            <div>
+              <strong>Administrador:</strong> Puede gestionar miembros, crear códigos de invitación y todas las funciones excepto eliminar el proyecto.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <User className="text-gray-600 mt-0.5" size={16} />
             <div>
-              <strong>Miembro:</strong> Puede ver y gestionar leads del proyecto, pero no puede invitar nuevos miembros ni cambiar configuraciones.
+              <strong>Miembro:</strong> Puede ver y gestionar leads, pero no puede invitar nuevos miembros ni cambiar configuraciones.
             </div>
           </div>
         </div>

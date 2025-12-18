@@ -62,6 +62,36 @@ npm run dev
 npm run build
 ```
 
+## Despliegue en Netlify
+
+Este proyecto está configurado para desplegarse en Netlify.
+
+### Configuración en Netlify
+
+1. **Conectar tu repositorio**
+   - Accede a [Netlify](https://app.netlify.com)
+   - Crea un nuevo sitio desde Git
+   - Conecta tu repositorio
+
+2. **Configurar variables de entorno**
+
+   En la configuración de tu sitio en Netlify (Site settings > Environment variables), agrega:
+   ```
+   VITE_SUPABASE_URL=tu_supabase_url
+   VITE_SUPABASE_ANON_KEY=tu_supabase_anon_key
+   ```
+
+3. **Configuración de build**
+
+   El archivo `netlify.toml` ya incluye la configuración necesaria:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Redirects para SPA configurados
+
+4. **Desplegar**
+   - Netlify desplegará automáticamente al hacer push a tu rama principal
+   - También puedes desplegar manualmente desde el dashboard de Netlify
+
 ## Estructura de la Base de Datos
 
 ### Tablas Principales

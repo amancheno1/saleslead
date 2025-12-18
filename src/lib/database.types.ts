@@ -169,21 +169,21 @@ export interface Database {
           id: string
           project_id: string
           user_id: string
-          role: 'owner' | 'member'
+          role: 'owner' | 'admin' | 'member'
           joined_at: string
         }
         Insert: {
           id?: string
           project_id: string
           user_id: string
-          role: 'owner' | 'member'
+          role: 'owner' | 'admin' | 'member'
           joined_at?: string
         }
         Update: {
           id?: string
           project_id?: string
           user_id?: string
-          role?: 'owner' | 'member'
+          role?: 'owner' | 'admin' | 'member'
           joined_at?: string
         }
       }
