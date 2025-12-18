@@ -42,6 +42,8 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
     payment_method: editLead?.payment_method || null,
     cash_collected: editLead?.cash_collected || null,
     closer: editLead?.closer || null,
+    installment_count: editLead?.installment_count || null,
+    initial_payment: editLead?.initial_payment || null,
     project_id: editLead?.project_id || currentProject?.id || null,
     user_id: editLead?.user_id || user?.id || null,
   });
@@ -229,13 +231,57 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Forma de Pago
           </label>
-          <input
-            type="text"
+          <select
             value={formData.payment_method || ''}
-            onChange={(e) => setFormData({ ...formData, payment_method: e.target.value || null })}
+            onChange={(e) => {
+              const newPaymentMethod = e.target.value || null;
+              setFormData({
+                ...formData,
+                payment_method: newPaymentMethod,
+                installment_count: newPaymentMethod === 'Pago a plazos' ? formData.installment_count : null,
+                initial_payment: newPaymentMethod === 'Pago a plazos' ? formData.initial_payment : null,
+              });
+            }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          >
+            <option value="">Sin definir</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Pago a plazos">Pago a plazos</option>
+            <option value="Sequra">Sequra</option>
+          </select>
         </div>
+
+        {formData.payment_method === 'Pago a plazos' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Número de Plazos
+              </label>
+              <select
+                value={formData.installment_count || ''}
+                onChange={(e) => setFormData({ ...formData, installment_count: e.target.value ? parseInt(e.target.value) : null })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Seleccionar</option>
+                <option value="2">2 plazos</option>
+                <option value="3">3 plazos</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Importe Inicial
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.initial_payment || ''}
+                onChange={(e) => setFormData({ ...formData, initial_payment: e.target.value ? parseFloat(e.target.value) : null })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

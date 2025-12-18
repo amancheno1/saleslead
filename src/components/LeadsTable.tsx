@@ -104,7 +104,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
 
     const leadsToExport = filteredLeads.map(lead => {
       const commissions = calculateCommissions(lead);
-      return {
+      const exportData: any = {
         'Nombre': `${lead.first_name} ${lead.last_name}`,
         'Formulario': lead.form_type,
         'Fecha de Entrada': new Date(lead.entry_date).toLocaleDateString('es-ES'),
@@ -116,11 +116,19 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         'Importe Venta': lead.sale_amount || 0,
         'Cash Collected': lead.cash_collected || 0,
         'Método de Pago': lead.payment_method || '',
-        'Comisión Setter': commissions.setterCommissionCash,
-        'Comisión Closer': commissions.closerCommission,
-        'Closer': lead.closer || '',
-        'Observaciones': lead.observations || ''
       };
+
+      if (lead.payment_method === 'Pago a plazos') {
+        exportData['Número de Plazos'] = lead.installment_count || '';
+        exportData['Importe Inicial'] = lead.initial_payment || 0;
+      }
+
+      exportData['Comisión Setter'] = commissions.setterCommissionCash;
+      exportData['Comisión Closer'] = commissions.closerCommission;
+      exportData['Closer'] = lead.closer || '';
+      exportData['Observaciones'] = lead.observations || '';
+
+      return exportData;
     });
 
     const wsLeads = XLSX.utils.json_to_sheet(leadsToExport);
