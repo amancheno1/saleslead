@@ -8,48 +8,22 @@ type ProjectMember = Database['public']['Tables']['project_members']['Row'] & {
   user_email?: string;
 };
 
-interface Project {
-  id: string;
-  user_id: string;
-}
-
 export default function ProjectMembers() {
   const { currentProject } = useProject();
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [projectOwnerId, setProjectOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser();
     if (currentProject) {
       fetchMembers();
-      fetchProjectOwner();
     }
   }, [currentProject]);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
-  };
-
-  const fetchProjectOwner = async () => {
-    if (!currentProject) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('user_id')
-        .eq('id', currentProject.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        setProjectOwnerId(data.user_id);
-      }
-    } catch (error) {
-      console.error('Error fetching project owner:', error);
-    }
   };
 
   const fetchMembers = async () => {
@@ -98,8 +72,8 @@ export default function ProjectMembers() {
     }
   };
 
-  const handleRemoveMember = async (memberId: string, memberUserId: string) => {
-    if (memberUserId === projectOwnerId) {
+  const handleRemoveMember = async (memberId: string, memberRole: string) => {
+    if (memberRole === 'owner') {
       alert('No puedes eliminar al propietario del proyecto');
       return;
     }
@@ -167,7 +141,7 @@ export default function ProjectMembers() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {members.map((member) => {
-                  const isOwner = member.user_id === projectOwnerId;
+                  const isOwner = member.role === 'owner';
                   const isCurrentUser = member.user_id === currentUserId;
 
                   return (
@@ -194,7 +168,14 @@ export default function ProjectMembers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {member.role === 'admin' ? (
+                          {member.role === 'owner' ? (
+                            <>
+                              <Crown className="text-yellow-500" size={18} />
+                              <span className="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">
+                                Propietario
+                              </span>
+                            </>
+                          ) : member.role === 'admin' ? (
                             <>
                               <Shield className="text-blue-600" size={18} />
                               <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
@@ -239,7 +220,7 @@ export default function ProjectMembers() {
                               </button>
                             )}
                             <button
-                              onClick={() => handleRemoveMember(member.id, member.user_id)}
+                              onClick={() => handleRemoveMember(member.id, member.role)}
                               className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-medium text-xs flex items-center gap-1"
                             >
                               <UserMinus size={14} />
@@ -266,19 +247,19 @@ export default function ProjectMembers() {
           <div className="flex items-start gap-2">
             <Crown className="text-yellow-600 mt-0.5" size={16} />
             <div>
-              <strong>Propietario:</strong> Tiene control total del proyecto y no puede ser eliminado.
+              <strong>Propietario:</strong> Creador del proyecto con control total. No puede ser eliminado ni degradado.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <Shield className="text-blue-600 mt-0.5" size={16} />
             <div>
-              <strong>Administrador:</strong> Puede gestionar miembros, crear códigos de invitación y acceder a todas las funciones.
+              <strong>Administrador:</strong> Puede gestionar miembros, crear códigos de invitación y todas las funciones excepto eliminar el proyecto.
             </div>
           </div>
           <div className="flex items-start gap-2">
             <User className="text-gray-600 mt-0.5" size={16} />
             <div>
-              <strong>Miembro:</strong> Puede ver y gestionar leads, pero no puede invitar nuevos miembros.
+              <strong>Miembro:</strong> Puede ver y gestionar leads, pero no puede invitar nuevos miembros ni cambiar configuraciones.
             </div>
           </div>
         </div>
