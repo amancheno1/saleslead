@@ -51,19 +51,23 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);
     const totalCashCollected = monthlyLeads.reduce((sum, l) => sum + (l.cash_collected || 0), 0);
 
-    const setterCommissionFromSales = totalRevenue * 0.07;
-    const setterCommissionFromCash = totalCashCollected * 0.07;
+    const setterCommissionFromSales = totalRevenue * 0.08;
+    const setterCommissionFromCash = totalCashCollected * 0.08;
+    const closerCommissionFromSales = totalRevenue * 0.08;
     const closerCommissionFromCash = totalCashCollected * 0.08;
 
-    const closerBreakdown: { [key: string]: { sales: number; cashCollected: number; commission: number } } = {};
+    const closerBreakdown: { [key: string]: { sales: number; revenue: number; cashCollected: number; commissionFromSales: number; commissionFromCash: number; totalCommission: number } } = {};
     monthlyLeads.forEach(lead => {
       if (lead.sale_made && lead.closer) {
         if (!closerBreakdown[lead.closer]) {
-          closerBreakdown[lead.closer] = { sales: 0, cashCollected: 0, commission: 0 };
+          closerBreakdown[lead.closer] = { sales: 0, revenue: 0, cashCollected: 0, commissionFromSales: 0, commissionFromCash: 0, totalCommission: 0 };
         }
         closerBreakdown[lead.closer].sales += 1;
+        closerBreakdown[lead.closer].revenue += lead.sale_amount || 0;
         closerBreakdown[lead.closer].cashCollected += lead.cash_collected || 0;
-        closerBreakdown[lead.closer].commission += (lead.cash_collected || 0) * 0.08;
+        closerBreakdown[lead.closer].commissionFromSales += (lead.sale_amount || 0) * 0.08;
+        closerBreakdown[lead.closer].commissionFromCash += (lead.cash_collected || 0) * 0.08;
+        closerBreakdown[lead.closer].totalCommission += ((lead.sale_amount || 0) * 0.08) + ((lead.cash_collected || 0) * 0.08);
       }
     });
 
@@ -73,6 +77,7 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
       totalCashCollected,
       setterCommissionFromSales,
       setterCommissionFromCash,
+      closerCommissionFromSales,
       closerCommissionFromCash,
       closerBreakdown
     };
@@ -107,17 +112,17 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg shadow-lg p-4 md:p-6 text-white">
+      <div className="bg-gradient-to-r from-cyan-600 to-teal-700 rounded-lg shadow-lg p-4 md:p-6 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-xl md:text-2xl font-bold mb-2">Comisiones</h2>
-            <p className="text-sm md:text-base text-purple-100">Cálculo de comisiones de setter y closers</p>
+            <p className="text-sm md:text-base text-cyan-100">Cálculo de comisiones de setter y closers</p>
           </div>
           <div className="flex gap-2">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="px-3 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium focus:ring-2 focus:ring-purple-300"
+              className="px-3 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium focus:ring-2 focus:ring-cyan-300"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i}>{getMonthName(i)}</option>
@@ -126,7 +131,7 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="px-3 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium focus:ring-2 focus:ring-purple-300"
+              className="px-3 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium focus:ring-2 focus:ring-cyan-300"
             >
               {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                 <option key={year} value={year}>{year}</option>
@@ -143,21 +148,21 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
           <div>
             <h3 className="text-base md:text-lg font-semibold text-gray-900">Comisiones Setter</h3>
-            <p className="text-xs md:text-sm text-gray-600">7% sobre ventas y cash collected</p>
+            <p className="text-xs md:text-sm text-gray-600">8% sobre ventas y cash collected</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <StatCard
             icon={DollarSign}
-            label="Comisión sobre Ventas (7%)"
+            label="Comisión sobre Ventas (8%)"
             value={`$${metrics.setterCommissionFromSales.toFixed(2)}`}
             subtitle={`Sobre $${metrics.totalRevenue.toFixed(2)}`}
             color="blue"
           />
           <StatCard
             icon={DollarSign}
-            label="Comisión sobre Cash (7%)"
+            label="Comisión sobre Cash (8%)"
             value={`$${metrics.setterCommissionFromCash.toFixed(2)}`}
             subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
             color="blue"
@@ -179,17 +184,31 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
           <div>
             <h3 className="text-base md:text-lg font-semibold text-gray-900">Comisiones Closers</h3>
-            <p className="text-xs md:text-sm text-gray-600">8% sobre cash collected</p>
+            <p className="text-xs md:text-sm text-gray-600">8% sobre ventas y cash collected</p>
           </div>
         </div>
 
-        <div className="mb-4 md:mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
           <StatCard
             icon={DollarSign}
-            label="Total Comisiones Closers (8%)"
-            value={`$${metrics.closerCommissionFromCash.toFixed(2)}`}
-            subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)} cash collected`}
+            label="Comisión sobre Ventas (8%)"
+            value={`$${metrics.closerCommissionFromSales.toFixed(2)}`}
+            subtitle={`Sobre $${metrics.totalRevenue.toFixed(2)}`}
             color="green"
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Comisión sobre Cash (8%)"
+            value={`$${metrics.closerCommissionFromCash.toFixed(2)}`}
+            subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
+            color="green"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Total Ventas"
+            value={metrics.totalSales}
+            subtitle={`${getMonthName(selectedMonth)} ${selectedYear}`}
+            color="cyan"
           />
         </div>
 
@@ -197,19 +216,33 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-gray-700 mb-3">Desglose por Closer</h4>
             {Object.entries(metrics.closerBreakdown)
-              .sort((a, b) => b[1].commission - a[1].commission)
+              .sort((a, b) => b[1].totalCommission - a[1].totalCommission)
               .map(([closer, data]) => (
                 <div key={closer} className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm md:text-base truncate">{closer}</p>
-                      <p className="text-xs md:text-sm text-gray-600">
-                        {data.sales} {data.sales === 1 ? 'venta' : 'ventas'} • Cash: ${data.cashCollected.toFixed(2)}
-                      </p>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm md:text-base truncate">{closer}</p>
+                        <p className="text-xs md:text-sm text-gray-600">
+                          {data.sales} {data.sales === 1 ? 'venta' : 'ventas'}
+                        </p>
+                      </div>
+                      <div className="text-left md:text-right">
+                        <p className="text-lg md:text-xl font-bold text-green-600">${data.totalCommission.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Total comisión</p>
+                      </div>
                     </div>
-                    <div className="text-left md:text-right">
-                      <p className="text-lg md:text-xl font-bold text-green-600">${data.commission.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500">8% comisión</p>
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                      <div>
+                        <p className="text-xs text-gray-500">Sobre Ventas (8%)</p>
+                        <p className="text-sm font-bold text-gray-900">${data.commissionFromSales.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Base: ${data.revenue.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Sobre Cash (8%)</p>
+                        <p className="text-sm font-bold text-gray-900">${data.commissionFromCash.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Base: ${data.cashCollected.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
