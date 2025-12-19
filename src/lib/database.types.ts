@@ -49,7 +49,7 @@ export interface Database {
           entry_date: string
           contact_date: string | null
           scheduled_call_date: string | null
-          attended_meeting: boolean | null
+          attended_meeting: string | null
           result: string | null
           sale_made: boolean
           observations: string | null
@@ -72,7 +72,7 @@ export interface Database {
           entry_date?: string
           contact_date?: string | null
           scheduled_call_date?: string | null
-          attended_meeting?: boolean | null
+          attended_meeting?: string | null
           result?: string | null
           sale_made?: boolean
           observations?: string | null
@@ -95,7 +95,7 @@ export interface Database {
           entry_date?: string
           contact_date?: string | null
           scheduled_call_date?: string | null
-          attended_meeting?: boolean | null
+          attended_meeting?: string | null
           result?: string | null
           sale_made?: boolean
           observations?: string | null

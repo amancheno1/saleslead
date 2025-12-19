@@ -110,7 +110,11 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         'Fecha de Entrada': new Date(lead.entry_date).toLocaleDateString('es-ES'),
         'Fecha de Contacto': lead.contact_date ? new Date(lead.contact_date).toLocaleDateString('es-ES') : '',
         'Llamada Agendada': lead.scheduled_call_date ? new Date(lead.scheduled_call_date).toLocaleDateString('es-ES') : '',
-        'Asistió': lead.attended_meeting === null ? '' : lead.attended_meeting ? 'Sí' : 'No',
+        'Asistió': lead.attended_meeting === null ? '' :
+          lead.attended_meeting === 'si' ? 'Sí' :
+          lead.attended_meeting === 'cancelada' ? 'Cancelada' :
+          lead.attended_meeting === 'no_show' ? 'No Show' :
+          lead.attended_meeting === 'no' ? 'No' : '',
         'Resultado': lead.result || '',
         'Venta': lead.sale_made ? 'Sí' : 'No',
         'Importe Venta': lead.sale_amount || 0,
@@ -325,10 +329,16 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 <td className="px-4 py-3 text-sm">
                   {lead.attended_meeting === null ? (
                     <span className="text-gray-400">-</span>
-                  ) : lead.attended_meeting ? (
+                  ) : lead.attended_meeting === 'si' ? (
                     <span className="text-green-600 font-medium">Sí</span>
+                  ) : lead.attended_meeting === 'cancelada' ? (
+                    <span className="text-red-600 font-medium">Cancelada</span>
+                  ) : lead.attended_meeting === 'no_show' ? (
+                    <span className="text-orange-600 font-medium">No Show</span>
+                  ) : lead.attended_meeting === 'no' ? (
+                    <span className="text-gray-600 font-medium">No</span>
                   ) : (
-                    <span className="text-red-600 font-medium">No</span>
+                    <span className="text-gray-400">-</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">{lead.result || '-'}</td>

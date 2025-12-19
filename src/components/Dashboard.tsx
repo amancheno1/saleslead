@@ -65,9 +65,9 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     const monthlyGoal = weeklyGoal * 4;
     const totalLeads = monthlyLeads.length;
     const scheduled = monthlyLeads.filter(l => l.scheduled_call_date).length;
-    const attended = monthlyLeads.filter(l => l.attended_meeting === true).length;
-    const cancelled = monthlyLeads.filter(l => l.attended_meeting === false && l.scheduled_call_date).length;
-    const noShow = monthlyLeads.filter(l => l.attended_meeting === false).length;
+    const attended = monthlyLeads.filter(l => l.attended_meeting === 'si').length;
+    const cancelled = monthlyLeads.filter(l => l.attended_meeting === 'cancelada').length;
+    const noShow = monthlyLeads.filter(l => l.attended_meeting === 'no_show').length;
     const offersGiven = monthlyLeads.filter(l => l.result && l.result !== 'no').length;
     const sales = monthlyLeads.filter(l => l.sale_made).length;
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);

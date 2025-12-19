@@ -171,16 +171,18 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
             ¿Asistió a Reunión?
           </label>
           <select
-            value={formData.attended_meeting === null ? '' : formData.attended_meeting.toString()}
+            value={formData.attended_meeting || ''}
             onChange={(e) => setFormData({
               ...formData,
-              attended_meeting: e.target.value === '' ? null : e.target.value === 'true'
+              attended_meeting: e.target.value || null
             })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Sin definir</option>
-            <option value="true">Sí</option>
-            <option value="false">No</option>
+            <option value="si">Sí</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="no_show">No Show</option>
+            <option value="no">No</option>
           </select>
         </div>
 
