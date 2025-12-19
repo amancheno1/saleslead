@@ -178,12 +178,12 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       { 'Métrica': 'No Show', 'Valor': metrics.noShow },
       { 'Métrica': 'Ofertas Realizadas', 'Valor': metrics.offersGiven },
       { 'Métrica': 'Ventas Cerradas', 'Valor': metrics.sales },
-      { 'Métrica': 'Facturación Total', 'Valor': `$${metrics.totalRevenue.toFixed(2)}` },
-      { 'Métrica': 'Cash Collected', 'Valor': `$${metrics.totalCashCollected.toFixed(2)}` },
+      { 'Métrica': 'Facturación Total', 'Valor': `€${metrics.totalRevenue.toFixed(2)}` },
+      { 'Métrica': 'Cash Collected', 'Valor': `€${metrics.totalCashCollected.toFixed(2)}` },
       { 'Métrica': 'Tasa de Agendamiento', 'Valor': `${metrics.scheduledRate.toFixed(1)}%` },
       { 'Métrica': 'Show Rate', 'Valor': `${metrics.showRate.toFixed(1)}%` },
       { 'Métrica': 'Close Rate', 'Valor': `${metrics.closeRate.toFixed(1)}%` },
-      { 'Métrica': '$ Por Lead', 'Valor': metrics.totalLeads > 0 ? `$${(metrics.totalRevenue / metrics.totalLeads).toFixed(2)}` : '$0' }
+      { 'Métrica': '€ Por Lead', 'Valor': metrics.totalLeads > 0 ? `€${(metrics.totalRevenue / metrics.totalLeads).toFixed(2)}` : '€0' }
     ];
 
     const wsSummary = XLSX.utils.json_to_sheet(summaryData);
@@ -538,11 +538,11 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200 hover:shadow-lg transition-all duration-300">
                     <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Facturación Total</p>
-                    <p className="text-3xl font-black text-blue-600">${metrics.totalRevenue.toFixed(0)}</p>
+                    <p className="text-3xl font-black text-blue-600">€{metrics.totalRevenue.toFixed(0)}</p>
                   </div>
                   <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl p-6 border-2 border-green-200 hover:shadow-lg transition-all duration-300">
                     <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Cash Collected</p>
-                    <p className="text-3xl font-black text-green-600">${metrics.totalCashCollected.toFixed(0)}</p>
+                    <p className="text-3xl font-black text-green-600">€{metrics.totalCashCollected.toFixed(0)}</p>
                   </div>
                 </div>
 
@@ -624,11 +624,11 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                   </div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-black text-white/80 uppercase tracking-wider">$ Por Lead</span>
+                      <span className="text-xs font-black text-white/80 uppercase tracking-wider">€ Por Lead</span>
                       <DollarSign size={20} className="text-white/80" />
                     </div>
                     <p className="text-5xl font-black text-white mb-2">
-                      ${metrics.totalLeads > 0 ? (metrics.totalRevenue / metrics.totalLeads).toFixed(0) : 0}
+                      €{metrics.totalLeads > 0 ? (metrics.totalRevenue / metrics.totalLeads).toFixed(0) : 0}
                     </p>
                     <p className="text-sm text-white/80 font-bold">promedio</p>
                   </div>

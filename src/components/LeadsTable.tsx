@@ -350,16 +350,16 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                  {lead.sale_amount ? `$${lead.sale_amount.toFixed(2)}` : '-'}
+                  {lead.sale_amount ? `€${lead.sale_amount.toFixed(2)}` : '-'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                  {lead.cash_collected ? `$${lead.cash_collected.toFixed(2)}` : '-'}
+                  {lead.cash_collected ? `€${lead.cash_collected.toFixed(2)}` : '-'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">
-                  ${commissions.setterCommissionCash.toFixed(2)}
+                  €{commissions.setterCommissionCash.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">
-                  ${commissions.closerCommission.toFixed(2)}
+                  €{commissions.closerCommission.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">{lead.closer || '-'}</td>
                 <td className="px-4 py-3 text-sm">

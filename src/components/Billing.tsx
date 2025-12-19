@@ -143,28 +143,28 @@ export default function Billing({ refreshTrigger }: BillingProps) {
         <StatCard
           icon={DollarSign}
           label="Facturación Total"
-          value={`$${metrics.totalRevenue.toFixed(2)}`}
+          value={`€${metrics.totalRevenue.toFixed(2)}`}
           subtitle="Valor total de ventas"
           color="blue"
         />
         <StatCard
           icon={Wallet}
           label="Cash Collected"
-          value={`$${metrics.totalCashCollected.toFixed(2)}`}
+          value={`€${metrics.totalCashCollected.toFixed(2)}`}
           subtitle="Efectivo recaudado"
           color="green"
         />
         <StatCard
           icon={CreditCard}
           label="Pagos Pendientes"
-          value={`$${metrics.pendingPayments.toFixed(2)}`}
+          value={`€${metrics.pendingPayments.toFixed(2)}`}
           subtitle="Por cobrar"
           color="orange"
         />
         <StatCard
           icon={DollarSign}
           label="Ticket Promedio"
-          value={`$${metrics.averageSaleValue.toFixed(2)}`}
+          value={`€${metrics.averageSaleValue.toFixed(2)}`}
           subtitle="Valor promedio por venta"
           color="blue"
         />
@@ -188,7 +188,7 @@ export default function Billing({ refreshTrigger }: BillingProps) {
                   <p className="text-xs md:text-sm text-gray-600">{data.count} {data.count === 1 ? 'venta' : 'ventas'}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-base md:text-lg font-bold text-green-600">${data.amount.toFixed(2)}</p>
+                  <p className="text-base md:text-lg font-bold text-green-600">€{data.amount.toFixed(2)}</p>
                   <p className="text-xs md:text-sm text-gray-500">
                     {((data.amount / metrics.totalRevenue) * 100).toFixed(1)}%
                   </p>

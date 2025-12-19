@@ -159,15 +159,15 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Ventas (7%)"
-            value={`$${metrics.setterCommissionFromSales.toFixed(2)}`}
-            subtitle={`Sobre $${metrics.totalRevenue.toFixed(2)}`}
+            value={`€${metrics.setterCommissionFromSales.toFixed(2)}`}
+            subtitle={`Sobre €${metrics.totalRevenue.toFixed(2)}`}
             color="blue"
           />
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Cash (7%)"
-            value={`$${metrics.setterCommissionFromCash.toFixed(2)}`}
-            subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
+            value={`€${metrics.setterCommissionFromCash.toFixed(2)}`}
+            subtitle={`Sobre €${metrics.totalCashCollected.toFixed(2)}`}
             color="blue"
           />
           <div
@@ -203,15 +203,15 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Ventas (8%)"
-            value={`$${metrics.closerCommissionFromSales.toFixed(2)}`}
-            subtitle={`Sobre $${metrics.totalRevenue.toFixed(2)}`}
+            value={`€${metrics.closerCommissionFromSales.toFixed(2)}`}
+            subtitle={`Sobre €${metrics.totalRevenue.toFixed(2)}`}
             color="green"
           />
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Cash (8%)"
-            value={`$${metrics.closerCommissionFromCash.toFixed(2)}`}
-            subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
+            value={`€${metrics.closerCommissionFromCash.toFixed(2)}`}
+            subtitle={`Sobre €${metrics.totalCashCollected.toFixed(2)}`}
             color="green"
           />
           <div
@@ -248,13 +248,13 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <p className="text-xs text-gray-500">Sobre Ventas (8%)</p>
-                        <p className="text-sm font-bold text-gray-900">${data.commissionFromSales.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">Base: ${data.revenue.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-gray-900">€{data.commissionFromSales.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Base: €{data.revenue.toFixed(2)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Sobre Cash (8%)</p>
-                        <p className="text-sm font-bold text-gray-900">${data.commissionFromCash.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">Base: ${data.cashCollected.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-gray-900">€{data.commissionFromCash.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">Base: €{data.cashCollected.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
@@ -291,10 +291,10 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{lead.client_name}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{lead.closer || '-'}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${(lead.sale_amount || 0).toFixed(2)}
+                      €{(lead.sale_amount || 0).toFixed(2)}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${(lead.cash_collected || 0).toFixed(2)}
+                      €{(lead.cash_collected || 0).toFixed(2)}
                     </td>
                   </tr>
                 ))}

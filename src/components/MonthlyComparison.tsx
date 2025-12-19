@@ -390,7 +390,7 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px]">
                     <div className="text-center mb-1 md:mb-2">
-                      <p className="text-xs md:text-sm font-bold text-gray-900">${data.revenue.toFixed(0)}</p>
+                      <p className="text-xs md:text-sm font-bold text-gray-900">€{data.revenue.toFixed(0)}</p>
                       <p className="text-xs text-gray-500">total</p>
                     </div>
                     <div className="relative flex flex-col justify-end w-full h-32 md:h-44">
@@ -400,17 +400,17 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
                       >
                         {data.revenue > 0 && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">${data.revenue.toFixed(0)}</span>
+                            <span className="text-white font-bold text-xs">€{data.revenue.toFixed(0)}</span>
                           </div>
                         )}
                         <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                          Cash: ${data.cashCollected.toFixed(0)} ({data.revenue > 0 ? ((data.cashCollected / data.revenue) * 100).toFixed(0) : 0}%)
+                          Cash: €{data.cashCollected.toFixed(0)} ({data.revenue > 0 ? ((data.cashCollected / data.revenue) * 100).toFixed(0) : 0}%)
                         </div>
                       </div>
                     </div>
                     <div className="text-center mt-1 md:mt-2">
                       <p className="text-xs md:text-sm font-semibold text-gray-700">{data.month}</p>
-                      <p className="text-xs text-gray-500">${data.cashCollected.toFixed(0)}</p>
+                      <p className="text-xs text-gray-500">€{data.cashCollected.toFixed(0)}</p>
                     </div>
                   </div>
                 );
@@ -423,7 +423,7 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
               {monthlyData.slice(-3).map((data, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-600 mb-1">{data.month}</p>
-                  <p className="text-base md:text-lg font-bold text-gray-900">${data.revenue.toFixed(0)}</p>
+                  <p className="text-base md:text-lg font-bold text-gray-900">€{data.revenue.toFixed(0)}</p>
                   <p className="text-xs text-green-600">
                     {data.revenue > 0 ? ((data.cashCollected / data.revenue) * 100).toFixed(0) : 0}% cobrado
                   </p>
