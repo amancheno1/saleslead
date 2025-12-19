@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Wallet, Calendar } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Wallet, Calendar, ExternalLink, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import type { Database } from '../lib/database.types';
@@ -16,6 +16,7 @@ export default function Billing({ refreshTrigger }: BillingProps) {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   useEffect(() => {
     if (currentProject) {
@@ -47,7 +48,8 @@ export default function Billing({ refreshTrigger }: BillingProps) {
       return entryDate.getMonth() === selectedMonth && entryDate.getFullYear() === selectedYear;
     });
 
-    const totalSales = monthlyLeads.filter(l => l.sale_made).length;
+    const salesLeads = monthlyLeads.filter(l => l.sale_made);
+    const totalSales = salesLeads.length;
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);
     const totalCashCollected = monthlyLeads.reduce((sum, l) => sum + (l.cash_collected || 0), 0);
     const pendingPayments = totalRevenue - totalCashCollected;
@@ -70,7 +72,8 @@ export default function Billing({ refreshTrigger }: BillingProps) {
       totalCashCollected,
       pendingPayments,
       averageSaleValue,
-      salesByPaymentMethod
+      salesByPaymentMethod,
+      salesLeads
     };
   };
 
@@ -199,10 +202,215 @@ export default function Billing({ refreshTrigger }: BillingProps) {
         </div>
       )}
 
+      {metrics.salesLeads.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4 md:p-6 border-b border-gray-100">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900">
+              Ventas Cerradas ({metrics.salesLeads.length})
+            </h3>
+            <p className="text-xs md:text-sm text-gray-600 mt-1">
+              Lista detallada de todas las ventas del período
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Cliente
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Closer
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Monto Venta
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Cash Collected
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Forma de Pago
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {metrics.salesLeads.map((lead) => {
+                  const pendingAmount = (lead.sale_amount || 0) - (lead.cash_collected || 0);
+                  return (
+                    <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
+                        {new Date(lead.entry_date).toLocaleDateString('es-ES')}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {lead.first_name} {lead.last_name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {lead.closer || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        €{(lead.sale_amount || 0).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`font-medium ${
+                          pendingAmount > 0 ? 'text-orange-600' : 'text-green-600'
+                        }`}>
+                          €{(lead.cash_collected || 0).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {lead.payment_method || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <button
+                          onClick={() => setSelectedLead(lead)}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                        >
+                          <Eye size={16} />
+                          <span className="font-medium">Ver</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {metrics.totalSales === 0 && (
         <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-100 text-center">
           <DollarSign className="mx-auto text-gray-400 mb-4" size={48} />
           <p className="text-gray-600 text-sm md:text-base">No hay ventas registradas para este período</p>
+        </div>
+      )}
+
+      {selectedLead && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold">Detalles de Venta</h3>
+                  <p className="text-sm text-blue-100 mt-1">
+                    {selectedLead.first_name} {selectedLead.last_name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedLead(null)}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha de Entrada</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">
+                    {new Date(selectedLead.entry_date).toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Teléfono</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.phone}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.email || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Setter</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.setter || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Closer</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.closer || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado Reunión</label>
+                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.meeting_status || '-'}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+                  Información Financiera
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <label className="text-xs font-semibold text-green-700 uppercase tracking-wider">Monto de Venta</label>
+                    <p className="mt-1 text-2xl text-green-600 font-bold">
+                      €{(selectedLead.sale_amount || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <label className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Cash Collected</label>
+                    <p className="mt-1 text-2xl text-blue-600 font-bold">
+                      €{(selectedLead.cash_collected || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${
+                    (selectedLead.sale_amount || 0) - (selectedLead.cash_collected || 0) > 0
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <label className={`text-xs font-semibold uppercase tracking-wider ${
+                      (selectedLead.sale_amount || 0) - (selectedLead.cash_collected || 0) > 0
+                        ? 'text-orange-700'
+                        : 'text-gray-700'
+                    }`}>Pendiente de Cobro</label>
+                    <p className={`mt-1 text-2xl font-bold ${
+                      (selectedLead.sale_amount || 0) - (selectedLead.cash_collected || 0) > 0
+                        ? 'text-orange-600'
+                        : 'text-gray-600'
+                    }`}>
+                      €{((selectedLead.sale_amount || 0) - (selectedLead.cash_collected || 0)).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Forma de Pago</label>
+                    <p className="mt-1 text-lg text-gray-900 font-medium">
+                      {selectedLead.payment_method || 'No especificada'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedLead.notes && (
+                <div className="border-t border-gray-200 pt-6">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Notas</label>
+                  <p className="mt-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    {selectedLead.notes}
+                  </p>
+                </div>
+              )}
+
+              <div className="border-t border-gray-200 pt-6">
+                <button
+                  onClick={() => setSelectedLead(null)}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
