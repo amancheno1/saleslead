@@ -248,7 +248,7 @@ function App() {
           <main className="flex-1 p-4 md:p-8 lg:p-10">
             <div className="max-w-[1800px] mx-auto">
               {currentView === 'dashboard' && (
-                <Dashboard refreshTrigger={refreshTrigger} />
+                <Dashboard refreshTrigger={refreshTrigger} onNavigate={setCurrentView} />
               )}
 
               {currentView === 'leads' && (

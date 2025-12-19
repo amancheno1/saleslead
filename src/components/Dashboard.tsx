@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Calendar, DollarSign, Target, Phone, CheckCircle, XCircle, Clock, BarChart3, Zap, ArrowUp, Activity, Download } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, Target, Phone, CheckCircle, XCircle, Clock, BarChart3, Zap, ArrowUp, Activity, Download, ArrowRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
@@ -11,9 +11,10 @@ type MetaLead = Database['public']['Tables']['meta_leads']['Row'];
 
 interface DashboardProps {
   refreshTrigger: number;
+  onNavigate?: (view: 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'team') => void;
 }
 
-export default function Dashboard({ refreshTrigger }: DashboardProps) {
+export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps) {
   const { currentProject } = useProject();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
@@ -519,7 +520,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                     <CheckCircle size={200} />
                   </div>
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-sm font-bold text-white/90 uppercase tracking-wide mb-2">Ventas Cerradas</p>
                         <p className="text-6xl font-black text-white mb-2">{metrics.sales}</p>
@@ -532,6 +533,15 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                         <CheckCircle className="text-white/30" size={120} />
                       </div>
                     </div>
+                    {onNavigate && metrics.sales > 0 && (
+                      <button
+                        onClick={() => onNavigate('billing')}
+                        className="group inline-flex items-center gap-2 bg-white hover:bg-white/95 text-green-700 font-bold px-4 py-2.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
+                      >
+                        <span>Ver Detalles de Facturación</span>
+                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
