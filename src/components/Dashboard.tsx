@@ -357,7 +357,11 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                             </div>
                           </div>
                           <div className="text-right">
+                            <p className="text-sm text-gray-600 font-semibold mb-1">
+                              <span className="text-blue-600">{weekData.metaLeads} Leads Meta</span>
+                            </p>
                             <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{weekData.scheduledLeads}</p>
+                            <p className="text-xs text-orange-600 font-bold mt-1">Agendados</p>
                             <div className="flex items-center gap-1 justify-end mt-2">
                               {weekData.percentage >= 100 && <ArrowUp size={14} className="text-green-600" />}
                               <p className={`text-sm font-black ${
