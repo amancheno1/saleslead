@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, AlertTriangle, Key } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
 import InvitationCodes from './InvitationCodes';
 
@@ -71,7 +71,7 @@ export default function Settings({ onUpdate }: SettingsProps) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-xl p-6 text-white">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-white/20 backdrop-blur-sm rounded-xl">
             <Key className="text-white" size={32} />
