@@ -386,20 +386,24 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                           <p className="text-xs md:text-sm font-bold text-white/90 uppercase tracking-wide mb-3 md:mb-2">Total del Mes</p>
                           <div className="flex items-center gap-3 md:gap-4 flex-wrap">
                             <div>
-                              <p className="text-xs text-white/70 mb-1">Meta</p>
-                              <p className="text-xl md:text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)}</p>
-                            </div>
-                            <div className="text-white/50 text-2xl md:text-3xl font-black">+</div>
-                            <div>
                               <p className="text-xs text-white/70 mb-1">Manuales</p>
                               <p className="text-xl md:text-2xl font-black text-green-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0)}</p>
+                            </div>
+                            <div className="text-white/50 text-2xl md:text-3xl font-black">→</div>
+                            <div>
+                              <p className="text-xs text-white/70 mb-1">Agendados</p>
+                              <p className="text-xl md:text-2xl font-black text-yellow-200">{metrics.scheduled}</p>
                             </div>
                           </div>
                         </div>
                         <div className="text-left md:text-right shrink-0">
                           <p className="text-xs text-white/70 mb-1 md:mb-2">Total General</p>
-                          <p className="text-4xl md:text-6xl font-black text-white mb-1 md:mb-2">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
-                          <p className="text-xs md:text-sm text-white/80 font-bold">de {metrics.monthlyGoal} meta</p>
+                          <p className="text-4xl md:text-6xl font-black text-white mb-1 md:mb-2">{metrics.scheduled}</p>
+                          <p className="text-xs md:text-sm text-white/80 font-bold">
+                            {metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0) > 0
+                              ? ((metrics.scheduled / metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)) * 100).toFixed(1)
+                              : 0}% sobre leads Meta
+                          </p>
                         </div>
                       </div>
                     </div>
