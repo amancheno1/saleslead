@@ -236,10 +236,10 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
         </button>
       </div>
 
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 rounded-3xl shadow-2xl p-8 md:p-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 rounded-3xl shadow-2xl p-8 md:p-12">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40"></div>
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
         <div className="relative z-10">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
@@ -297,7 +297,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-2xl p-6 mb-8 shadow-2xl">
+                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl p-6 mb-8 shadow-2xl">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
@@ -349,7 +349,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{weekData.totalLeads}</p>
+                            <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{weekData.totalLeads}</p>
                             <p className="text-xs text-gray-600 font-semibold">
                               <span className="text-blue-600">{weekData.metaLeads} Meta</span> + <span className="text-green-600">{weekData.manualLeads} Manual</span>
                             </p>
@@ -378,28 +378,28 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                     </div>
                   ))}
 
-                  <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-6 shadow-2xl mt-6">
+                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-4 md:p-6 shadow-2xl mt-6">
                     <div className="absolute inset-0 bg-black/10"></div>
                     <div className="relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-white/90 uppercase tracking-wide mb-2">Total del Mes</p>
-                          <div className="flex items-center gap-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-xs md:text-sm font-bold text-white/90 uppercase tracking-wide mb-3 md:mb-2">Total del Mes</p>
+                          <div className="flex items-center gap-3 md:gap-4 flex-wrap">
                             <div>
-                              <p className="text-xs text-white/70 mb-1">Leads Meta</p>
-                              <p className="text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)}</p>
+                              <p className="text-xs text-white/70 mb-1">Meta</p>
+                              <p className="text-xl md:text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)}</p>
                             </div>
-                            <div className="text-white/50 text-3xl font-black">+</div>
+                            <div className="text-white/50 text-2xl md:text-3xl font-black">+</div>
                             <div>
-                              <p className="text-xs text-white/70 mb-1">Leads Manuales</p>
-                              <p className="text-2xl font-black text-green-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0)}</p>
+                              <p className="text-xs text-white/70 mb-1">Manuales</p>
+                              <p className="text-xl md:text-2xl font-black text-green-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0)}</p>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-white/70 mb-2">Total General</p>
-                          <p className="text-6xl font-black text-white mb-2">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
-                          <p className="text-sm text-white/80 font-bold">de {metrics.monthlyGoal} meta mensual</p>
+                        <div className="text-left md:text-right shrink-0">
+                          <p className="text-xs text-white/70 mb-1 md:mb-2">Total General</p>
+                          <p className="text-4xl md:text-6xl font-black text-white mb-1 md:mb-2">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
+                          <p className="text-xs md:text-sm text-white/80 font-bold">de {metrics.monthlyGoal} meta</p>
                         </div>
                       </div>
                     </div>
@@ -470,14 +470,14 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                 </div>
 
                 <div className="mt-6 pt-6 border-t-2 border-gray-200">
-                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-5 border-2 border-purple-200">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-cyan-50 to-teal-50 rounded-2xl p-5 border-2 border-cyan-200">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                      <div className="p-3 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-xl shadow-lg">
                         <Zap className="text-white" size={24} />
                       </div>
                       <span className="text-base font-black text-gray-900">Ofertas Realizadas</span>
                     </div>
-                    <span className="text-4xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{metrics.offersGiven}</span>
+                    <span className="text-4xl font-black bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">{metrics.offersGiven}</span>
                   </div>
                 </div>
               </div>
@@ -550,10 +550,10 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
 
         <div className="lg:col-span-1 space-y-8">
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
             <div className="relative bg-white rounded-3xl shadow-xl p-6 border border-gray-100 sticky top-8">
               <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl shadow-lg">
                   <Activity className="text-white" size={28} />
                 </div>
                 <div>
@@ -605,7 +605,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden group/kpi bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <div className="relative overflow-hidden group/kpi bg-gradient-to-br from-cyan-500 to-teal-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                   <div className="absolute top-0 right-0 text-white/10">
                     <DollarSign size={100} />
                   </div>
@@ -627,10 +627,10 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       </div>
 
       <div className="relative group">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
         <div className="relative bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg">
+            <div className="p-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-lg">
               <BarChart3 className="text-white" size={32} />
             </div>
             <div>
