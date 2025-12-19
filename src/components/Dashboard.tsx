@@ -87,7 +87,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
     const monday = getMonday(new Date(firstDayOfMonth));
 
-    const leadsByWeek: { week: number; manualLeads: number; metaLeads: number; totalLeads: number; goal: number; percentage: number }[] = [];
+    const leadsByWeek: { week: number; manualLeads: number; metaLeads: number; totalLeads: number; scheduledLeads: number; goal: number; percentage: number }[] = [];
 
     for (let i = 0; i < 6; i++) {
       const weekStart = new Date(monday);
@@ -101,6 +101,11 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       const weekManualLeads = monthlyLeads.filter(lead => {
         const entryDate = new Date(lead.entry_date);
         return entryDate >= weekStart && entryDate <= weekEnd;
+      }).length;
+
+      const weekScheduledLeads = monthlyLeads.filter(lead => {
+        const entryDate = new Date(lead.entry_date);
+        return entryDate >= weekStart && entryDate <= weekEnd && lead.scheduled_call_date;
       }).length;
 
       let weekMetaLeads = 0;
@@ -118,6 +123,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
         manualLeads: weekManualLeads,
         metaLeads: weekMetaLeads,
         totalLeads: totalWeekLeads,
+        scheduledLeads: weekScheduledLeads,
         goal: weeklyGoal,
         percentage: weeklyGoal > 0 ? (totalWeekLeads / weeklyGoal) * 100 : 0
       });
@@ -188,6 +194,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       'Leads Meta': week.metaLeads,
       'Leads Manuales': week.manualLeads,
       'Total Leads': week.totalLeads,
+      'Agendados': week.scheduledLeads,
       'Meta': week.goal,
       'Cumplimiento': `${week.percentage.toFixed(1)}%`
     }));
@@ -197,6 +204,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
       'Leads Meta': metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0),
       'Leads Manuales': metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0),
       'Total Leads': metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0),
+      'Agendados': metrics.scheduled,
       'Meta': metrics.monthlyGoal,
       'Cumplimiento': `${((metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0) / metrics.monthlyGoal) * 100).toFixed(1)}%`
     };
@@ -353,6 +361,9 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                             <p className="text-xs text-gray-600 font-semibold">
                               <span className="text-blue-600">{weekData.metaLeads} Meta</span> + <span className="text-green-600">{weekData.manualLeads} Manual</span>
                             </p>
+                            <p className="text-xs text-orange-600 font-bold mt-1">
+                              {weekData.scheduledLeads} Agendados
+                            </p>
                             <div className="flex items-center gap-1 justify-end mt-1">
                               {weekData.percentage >= 100 && <ArrowUp size={14} className="text-green-600" />}
                               <p className={`text-sm font-black ${
@@ -386,8 +397,8 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                           <p className="text-xs md:text-sm font-bold text-white/90 uppercase tracking-wide mb-3 md:mb-2">Total del Mes</p>
                           <div className="flex items-center gap-3 md:gap-4 flex-wrap">
                             <div>
-                              <p className="text-xs text-white/70 mb-1">Manuales</p>
-                              <p className="text-xl md:text-2xl font-black text-green-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0)}</p>
+                              <p className="text-xs text-white/70 mb-1">Leads Semanales</p>
+                              <p className="text-xl md:text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
                             </div>
                             <div className="text-white/50 text-2xl md:text-3xl font-black">→</div>
                             <div>
