@@ -11,6 +11,7 @@ import Billing from './components/Billing';
 import Commissions from './components/Commissions';
 import MetaLeads from './components/MetaLeads';
 import AdminDashboard from './components/AdminDashboard';
+import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -19,7 +20,7 @@ type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'me
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { currentProject, loading: projectLoading } = useProject();
+  const { currentProject, loading: projectLoading, userRole } = useProject();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [editingLead, setEditingLead] = useState<Lead | undefined>(undefined);
@@ -101,16 +102,19 @@ function App() {
 
   if (!currentProject) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="p-4 bg-blue-600 rounded-full inline-block mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md bg-white rounded-2xl shadow-xl p-8">
+          <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full inline-block mb-4">
             <LayoutDashboard className="text-white" size={32} />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Amz Kickstart</h2>
-          <p className="text-gray-600 mb-6">El sistema se está configurando. Por favor, espera un momento...</p>
+          <p className="text-gray-600 mb-6">No tienes proyectos todavía. Crea tu primer proyecto para comenzar.</p>
+          <div className="mb-4">
+            <ProjectSelector />
+          </div>
           <button
             onClick={handleSignOut}
-            className="mt-4 text-sm text-gray-600 hover:text-gray-900"
+            className="mt-4 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
             Cerrar Sesión
           </button>
@@ -126,7 +130,7 @@ function App() {
           mobileMenuOpen ? 'block' : 'hidden'
         } md:block w-full md:w-72 min-h-screen bg-white shadow-2xl border-r border-gray-100 fixed md:static z-30`}>
           <div className="p-6">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg">
                   <LayoutDashboard className="text-white" size={28} />
@@ -142,6 +146,10 @@ function App() {
               >
                 <X size={24} />
               </button>
+            </div>
+
+            <div className="mb-6">
+              <ProjectSelector />
             </div>
 
             <nav className="space-y-2">
@@ -187,7 +195,7 @@ function App() {
                 view="team"
                 active={currentView === 'team'}
               />
-              {user?.email === 'amancheno1979@gmail.com' && (
+              {userRole === 'owner' && (
                 <NavButton
                   icon={SettingsIcon}
                   label="Configuración"

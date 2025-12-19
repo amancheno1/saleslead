@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Trash2, Key } from 'lucide-react';
+import { Settings as SettingsIcon, AlertTriangle } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
 import InvitationCodes from './InvitationCodes';
 
@@ -8,7 +8,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onUpdate }: SettingsProps) {
-  const { currentProject, updateProject, deleteProject } = useProject();
+  const { currentProject, updateProject, userRole } = useProject();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [weeklyGoal, setWeeklyGoal] = useState(50);
@@ -24,12 +24,12 @@ export default function Settings({ onUpdate }: SettingsProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentProject) return;
+    if (!currentProject || userRole !== 'owner') return;
 
     setLoading(true);
 
     try {
-      await updateProject(currentProject.id, {
+      await updateProject({
         name: projectName,
         description: projectDescription || null,
         weekly_goal: weeklyGoal
@@ -45,25 +45,28 @@ export default function Settings({ onUpdate }: SettingsProps) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!currentProject) return;
-    if (!confirm(`¿Estás seguro de eliminar el proyecto "${currentProject.name}"? Esta acción no se puede deshacer y eliminará todos los leads asociados.`)) return;
-
-    setLoading(true);
-
-    try {
-      await deleteProject(currentProject.id);
-      alert('Proyecto eliminado correctamente');
-    } catch (error) {
-      console.error('Error deleting project:', error);
-      alert('Error al eliminar el proyecto');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!currentProject) {
     return <div className="text-center py-8 text-gray-600">No hay proyecto seleccionado</div>;
+  }
+
+  if (userRole !== 'owner') {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <AlertTriangle className="text-yellow-600" size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Acceso Restringido</h3>
+              <p className="text-gray-700">
+                Solo el creador del proyecto puede acceder a la configuración. Si necesitas realizar cambios, contacta al propietario del proyecto.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -149,31 +152,6 @@ export default function Settings({ onUpdate }: SettingsProps) {
         </form>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-red-100">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-red-50 rounded-lg">
-            <Trash2 className="text-red-600" size={24} />
-          </div>
-          <div>
-            <h2 className="text-lg md:text-xl font-semibold text-gray-900">Zona Peligrosa</h2>
-            <p className="text-xs md:text-sm text-gray-600">Acciones irreversibles</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm text-gray-600">
-            Eliminar el proyecto borrará permanentemente todos los leads asociados. Esta acción no se puede deshacer.
-          </p>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={loading}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Eliminando...' : 'Eliminar Proyecto'}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
