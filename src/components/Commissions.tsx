@@ -16,6 +16,7 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showSalesDetail, setShowSalesDetail] = useState(false);
 
   useEffect(() => {
     if (currentProject) {
@@ -47,7 +48,8 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
       return entryDate.getMonth() === selectedMonth && entryDate.getFullYear() === selectedYear;
     });
 
-    const totalSales = monthlyLeads.filter(l => l.sale_made).length;
+    const salesLeads = monthlyLeads.filter(l => l.sale_made);
+    const totalSales = salesLeads.length;
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);
     const totalCashCollected = monthlyLeads.reduce((sum, l) => sum + (l.cash_collected || 0), 0);
 
@@ -79,7 +81,8 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
       setterCommissionFromCash,
       closerCommissionFromSales,
       closerCommissionFromCash,
-      closerBreakdown
+      closerBreakdown,
+      salesLeads
     };
   };
 
@@ -152,7 +155,7 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Ventas (7%)"
@@ -167,6 +170,21 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
             subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
             color="blue"
           />
+          <div
+            className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => setShowSalesDetail(!showSalesDetail)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Total Ventas</p>
+                <p className="text-xl md:text-3xl font-bold text-green-600 truncate">{metrics.totalSales}</p>
+                <p className="text-xs text-gray-500 mt-1">{getMonthName(selectedMonth)} {selectedYear}</p>
+              </div>
+              <div className="p-2 md:p-3 bg-green-50 rounded-lg flex-shrink-0">
+                <TrendingUp className="text-green-600" size={20} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -196,13 +214,21 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
             subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
             color="green"
           />
-          <StatCard
-            icon={TrendingUp}
-            label="Total Ventas"
-            value={metrics.totalSales}
-            subtitle={`${getMonthName(selectedMonth)} ${selectedYear}`}
-            color="cyan"
-          />
+          <div
+            className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => setShowSalesDetail(!showSalesDetail)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Total Ventas</p>
+                <p className="text-xl md:text-3xl font-bold text-cyan-600 truncate">{metrics.totalSales}</p>
+                <p className="text-xs text-gray-500 mt-1">{getMonthName(selectedMonth)} {selectedYear}</p>
+              </div>
+              <div className="p-2 md:p-3 bg-cyan-50 rounded-lg flex-shrink-0">
+                <TrendingUp className="text-cyan-600" size={20} />
+              </div>
+            </div>
+          </div>
         </div>
 
         {Object.keys(metrics.closerBreakdown).length > 0 ? (
@@ -241,6 +267,42 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
         )}
       </div>
+
+      {showSalesDetail && metrics.salesLeads.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-purple-100">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Detalle de Ventas Realizadas</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Closer</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Venta</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cash Collected</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {metrics.salesLeads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(lead.entry_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{lead.client_name}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{lead.closer || '-'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${(lead.sale_amount || 0).toFixed(2)}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${(lead.cash_collected || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {metrics.totalSales === 0 && (
         <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-100 text-center">
