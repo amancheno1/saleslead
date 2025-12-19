@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, UserCog } from 'lucide-react';
+import { Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, UserCog, LayoutDashboard } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -104,9 +104,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center p-4">
         <div className="text-center max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full inline-block mb-4">
-            <LayoutDashboard className="text-white" size={32} />
-          </div>
+          <img src="/favicon.svg" alt="Amz Kickstart Logo" className="w-20 h-20 mx-auto mb-4 shadow-lg rounded-2xl" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Amz Kickstart</h2>
           <p className="text-gray-600 mb-6">No tienes proyectos todavía. Crea tu primer proyecto para comenzar.</p>
           <div className="mb-4">
@@ -132,9 +130,7 @@ function App() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg">
-                  <LayoutDashboard className="text-white" size={28} />
-                </div>
+                <img src="/favicon.svg" alt="Amz Kickstart Logo" className="w-12 h-12 shadow-lg rounded-xl" />
                 <div>
                   <h1 className="text-lg font-black text-gray-900 tracking-tight leading-tight">Amz Kickstart</h1>
                   <p className="text-xs text-gray-600 font-semibold">by Pol Brullas</p>
