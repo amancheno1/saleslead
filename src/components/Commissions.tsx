@@ -51,8 +51,8 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);
     const totalCashCollected = monthlyLeads.reduce((sum, l) => sum + (l.cash_collected || 0), 0);
 
-    const setterCommissionFromSales = totalRevenue * 0.08;
-    const setterCommissionFromCash = totalCashCollected * 0.08;
+    const setterCommissionFromSales = totalRevenue * 0.07;
+    const setterCommissionFromCash = totalCashCollected * 0.07;
     const closerCommissionFromSales = totalRevenue * 0.08;
     const closerCommissionFromCash = totalCashCollected * 0.08;
 
@@ -148,21 +148,21 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
           <div>
             <h3 className="text-base md:text-lg font-semibold text-gray-900">Comisiones Setter</h3>
-            <p className="text-xs md:text-sm text-gray-600">8% sobre ventas y cash collected</p>
+            <p className="text-xs md:text-sm text-gray-600">7% sobre ventas y cash collected</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <StatCard
             icon={DollarSign}
-            label="Comisión sobre Ventas (8%)"
+            label="Comisión sobre Ventas (7%)"
             value={`$${metrics.setterCommissionFromSales.toFixed(2)}`}
             subtitle={`Sobre $${metrics.totalRevenue.toFixed(2)}`}
             color="blue"
           />
           <StatCard
             icon={DollarSign}
-            label="Comisión sobre Cash (8%)"
+            label="Comisión sobre Cash (7%)"
             value={`$${metrics.setterCommissionFromCash.toFixed(2)}`}
             subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
             color="blue"
