@@ -7,6 +7,7 @@ import MonthlyComparison from './MonthlyComparison';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
+type MetaLead = Database['public']['Tables']['meta_leads']['Row'];
 
 interface DashboardProps {
   refreshTrigger: number;
@@ -15,6 +16,7 @@ interface DashboardProps {
 export default function Dashboard({ refreshTrigger }: DashboardProps) {
   const { currentProject } = useProject();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,13 +29,22 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     if (!currentProject) return;
 
     try {
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .eq('project_id', currentProject.id);
+      const [leadsResponse, metaLeadsResponse] = await Promise.all([
+        supabase
+          .from('leads')
+          .select('*')
+          .eq('project_id', currentProject.id),
+        supabase
+          .from('meta_leads')
+          .select('*')
+          .eq('project_id', currentProject.id)
+      ]);
 
-      if (error) throw error;
-      setLeads(data || []);
+      if (leadsResponse.error) throw leadsResponse.error;
+      if (metaLeadsResponse.error) throw metaLeadsResponse.error;
+
+      setLeads(leadsResponse.data || []);
+      setMetaLeads(metaLeadsResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -66,19 +77,49 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
     const showRate = scheduled > 0 ? (attended / scheduled) * 100 : 0;
     const closeRate = scheduled > 0 ? (sales / scheduled) * 100 : 0;
 
-    const leadsByWeek: { week: number; leads: number; goal: number; percentage: number }[] = [];
-    for (let i = 1; i <= 4; i++) {
-      const weekLeads = monthlyLeads.filter(lead => {
+    const getMonday = (date: Date) => {
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    };
+
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const monday = getMonday(new Date(firstDayOfMonth));
+
+    const leadsByWeek: { week: number; manualLeads: number; metaLeads: number; totalLeads: number; goal: number; percentage: number }[] = [];
+
+    for (let i = 0; i < 6; i++) {
+      const weekStart = new Date(monday);
+      weekStart.setDate(weekStart.getDate() + (i * 7));
+
+      if (weekStart > lastDayOfMonth) break;
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const weekManualLeads = monthlyLeads.filter(lead => {
         const entryDate = new Date(lead.entry_date);
-        const weekNumber = Math.ceil(entryDate.getDate() / 7);
-        return weekNumber === i;
+        return entryDate >= weekStart && entryDate <= weekEnd;
       }).length;
 
+      let weekMetaLeads = 0;
+      metaLeads.forEach(metaLead => {
+        const metaDate = new Date(metaLead.week_start_date);
+        if (metaDate >= weekStart && metaDate <= weekEnd) {
+          weekMetaLeads += metaLead.leads_count;
+        }
+      });
+
+      const totalWeekLeads = weekManualLeads + weekMetaLeads;
+
       leadsByWeek.push({
-        week: i,
-        leads: weekLeads,
+        week: i + 1,
+        manualLeads: weekManualLeads,
+        metaLeads: weekMetaLeads,
+        totalLeads: totalWeekLeads,
         goal: weeklyGoal,
-        percentage: weeklyGoal > 0 ? (weekLeads / weeklyGoal) * 100 : 0
+        percentage: weeklyGoal > 0 ? (totalWeekLeads / weeklyGoal) * 100 : 0
       });
     }
 
@@ -144,10 +185,23 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
 
     const weeklyData = metrics.leadsByWeek.map(week => ({
       'Semana': `Semana ${week.week}`,
-      'Leads': week.leads,
+      'Leads Meta': week.metaLeads,
+      'Leads Manuales': week.manualLeads,
+      'Total Leads': week.totalLeads,
       'Meta': week.goal,
       'Cumplimiento': `${week.percentage.toFixed(1)}%`
     }));
+
+    const totalRow = {
+      'Semana': 'TOTAL DEL MES',
+      'Leads Meta': metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0),
+      'Leads Manuales': metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0),
+      'Total Leads': metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0),
+      'Meta': metrics.monthlyGoal,
+      'Cumplimiento': `${((metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0) / metrics.monthlyGoal) * 100).toFixed(1)}%`
+    };
+
+    weeklyData.push(totalRow);
 
     const wsWeekly = XLSX.utils.json_to_sheet(weeklyData);
     XLSX.utils.book_append_sheet(wb, wsWeekly, 'Desglose Semanal');
@@ -295,8 +349,11 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{weekData.leads}</p>
-                            <div className="flex items-center gap-1 justify-end">
+                            <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{weekData.totalLeads}</p>
+                            <p className="text-xs text-gray-600 font-semibold">
+                              <span className="text-blue-600">{weekData.metaLeads} Meta</span> + <span className="text-green-600">{weekData.manualLeads} Manual</span>
+                            </p>
+                            <div className="flex items-center gap-1 justify-end mt-1">
                               {weekData.percentage >= 100 && <ArrowUp size={14} className="text-green-600" />}
                               <p className={`text-sm font-black ${
                                 weekData.percentage >= 100 ? 'text-green-600' :
@@ -320,6 +377,33 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                       </div>
                     </div>
                   ))}
+
+                  <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-6 shadow-2xl mt-6">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-white/90 uppercase tracking-wide mb-2">Total del Mes</p>
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="text-xs text-white/70 mb-1">Leads Meta</p>
+                              <p className="text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)}</p>
+                            </div>
+                            <div className="text-white/50 text-3xl font-black">+</div>
+                            <div>
+                              <p className="text-xs text-white/70 mb-1">Leads Manuales</p>
+                              <p className="text-2xl font-black text-green-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0)}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-white/70 mb-2">Total General</p>
+                          <p className="text-6xl font-black text-white mb-2">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
+                          <p className="text-sm text-white/80 font-bold">de {metrics.monthlyGoal} meta mensual</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
