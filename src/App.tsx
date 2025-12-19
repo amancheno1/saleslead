@@ -228,16 +228,19 @@ function App() {
             >
               <Menu size={24} />
             </button>
-            <h2 className="font-black text-gray-900 text-base tracking-tight">
-              {currentView === 'dashboard' && 'Dashboard'}
-              {currentView === 'leads' && 'Leads'}
-              {currentView === 'add-lead' && (editingLead ? 'Editar Lead' : 'Agregar Lead')}
-              {currentView === 'billing' && 'Facturación'}
-              {currentView === 'commissions' && 'Comisiones'}
-              {currentView === 'meta-leads' && 'Leads Meta'}
-              {currentView === 'team' && 'Equipo'}
-              {currentView === 'settings' && 'Configuración'}
-            </h2>
+            <div className="flex items-center gap-2">
+              <img src="/favicon.svg" alt="Logo" className="w-8 h-8 rounded-lg shadow-md" />
+              <h2 className="font-black text-gray-900 text-base tracking-tight">
+                {currentView === 'dashboard' && 'Dashboard'}
+                {currentView === 'leads' && 'Leads'}
+                {currentView === 'add-lead' && (editingLead ? 'Editar Lead' : 'Agregar Lead')}
+                {currentView === 'billing' && 'Facturación'}
+                {currentView === 'commissions' && 'Comisiones'}
+                {currentView === 'meta-leads' && 'Leads Meta'}
+                {currentView === 'team' && 'Equipo'}
+                {currentView === 'settings' && 'Configuración'}
+              </h2>
+            </div>
             <div className="w-6" />
           </header>
 
