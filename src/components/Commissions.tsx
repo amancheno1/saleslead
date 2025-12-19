@@ -152,7 +152,7 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <StatCard
             icon={DollarSign}
             label="Comisión sobre Ventas (7%)"
@@ -166,13 +166,6 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
             value={`$${metrics.setterCommissionFromCash.toFixed(2)}`}
             subtitle={`Sobre $${metrics.totalCashCollected.toFixed(2)}`}
             color="blue"
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Total Ventas"
-            value={metrics.totalSales}
-            subtitle={`${getMonthName(selectedMonth)} ${selectedYear}`}
-            color="green"
           />
         </div>
       </div>
@@ -220,19 +213,13 @@ export default function Commissions({ refreshTrigger }: CommissionsProps) {
               .map(([closer, data]) => (
                 <div key={closer} className="p-3 md:p-4 bg-gray-50 rounded-lg">
                   <div className="flex flex-col gap-3">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm md:text-base truncate">{closer}</p>
-                        <p className="text-xs md:text-sm text-gray-600">
-                          {data.sales} {data.sales === 1 ? 'venta' : 'ventas'}
-                        </p>
-                      </div>
-                      <div className="text-left md:text-right">
-                        <p className="text-lg md:text-xl font-bold text-green-600">${data.totalCommission.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500">Total comisión</p>
-                      </div>
+                    <div className="flex-1 min-w-0 mb-2">
+                      <p className="font-semibold text-gray-900 text-sm md:text-base truncate">{closer}</p>
+                      <p className="text-xs md:text-sm text-gray-600">
+                        {data.sales} {data.sales === 1 ? 'venta' : 'ventas'}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <p className="text-xs text-gray-500">Sobre Ventas (8%)</p>
                         <p className="text-sm font-bold text-gray-900">${data.commissionFromSales.toFixed(2)}</p>
