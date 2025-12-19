@@ -64,7 +64,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
 
     const scheduledRate = monthlyGoal > 0 ? (scheduled / monthlyGoal) * 100 : 0;
     const showRate = scheduled > 0 ? (attended / scheduled) * 100 : 0;
-    const closeRate = attended > 0 ? (sales / attended) * 100 : 0;
+    const closeRate = scheduled > 0 ? (sales / scheduled) * 100 : 0;
 
     const leadsByWeek: { week: number; leads: number; goal: number; percentage: number }[] = [];
     for (let i = 1; i <= 4; i++) {
@@ -517,7 +517,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
                       <Target size={20} className="text-white/80" />
                     </div>
                     <p className="text-5xl font-black text-white mb-2">{metrics.closeRate.toFixed(1)}%</p>
-                    <p className="text-sm text-white/80 font-bold">{metrics.sales} ventas</p>
+                    <p className="text-sm text-white/80 font-bold">{metrics.sales} de {metrics.scheduled} agendadas</p>
                   </div>
                 </div>
 
