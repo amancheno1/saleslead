@@ -16,6 +16,8 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
   const [leads, setLeads] = useState<Lead[]>([]);
   const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (currentProject) {
@@ -62,10 +64,15 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
     return new Date(date.setDate(diff));
   };
 
+  const getMonthName = (month: number) => {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[month];
+  };
+
   const calculateWeeklyData = () => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const currentYear = selectedYear;
+    const currentMonth = selectedMonth;
 
     const weeksData: {
       [key: string]: {
@@ -209,9 +216,29 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
           <div className="p-3 bg-blue-50 rounded-lg shrink-0">
             <BarChart3 className="text-blue-600" size={24} />
           </div>
-          <div className="min-w-0">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparación Semanal - Mes Actual</h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparación Semanal</h3>
             <p className="text-xs md:text-sm text-gray-600">Meta vs Manuales</p>
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500"
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i} value={i}>{getMonthName(i)}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500"
+            >
+              {Array.from({ length: 6 }, (_, i) => 2025 + i).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
           </div>
         </div>
 

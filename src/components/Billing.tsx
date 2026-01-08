@@ -127,7 +127,7 @@ export default function Billing({ refreshTrigger }: BillingProps) {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="px-3 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium focus:ring-2 focus:ring-green-300"
             >
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+              {Array.from({ length: 6 }, (_, i) => 2025 + i).map(year => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>

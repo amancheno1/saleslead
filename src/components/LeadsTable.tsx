@@ -127,9 +127,10 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         exportData['Importe Inicial'] = lead.initial_payment || 0;
       }
 
+      exportData['Setter'] = lead.setter || '';
       exportData['Comisión Setter'] = commissions.setterCommissionCash;
-      exportData['Comisión Closer'] = commissions.closerCommission;
       exportData['Closer'] = lead.closer || '';
+      exportData['Comisión Closer'] = commissions.closerCommission;
       exportData['Observaciones'] = lead.observations || '';
 
       return exportData;
@@ -265,7 +266,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500"
               >
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                {Array.from({ length: 6 }, (_, i) => 2025 + i).map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
               </select>
@@ -302,9 +303,10 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Venta</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Importe</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Cash</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Setter</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Com. Setter</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Com. Closer</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Closer</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Com. Closer</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Acciones</th>
           </tr>
         </thead>
@@ -355,13 +357,14 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">
                   {lead.cash_collected ? `€${lead.cash_collected.toFixed(2)}` : '-'}
                 </td>
+                <td className="px-4 py-3 text-sm text-gray-600">{lead.setter || '-'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">
                   €{commissions.setterCommissionCash.toFixed(2)}
                 </td>
+                <td className="px-4 py-3 text-sm text-gray-600">{lead.closer || '-'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">
                   €{commissions.closerCommission.toFixed(2)}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{lead.closer || '-'}</td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex gap-2">
                     <button

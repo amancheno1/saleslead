@@ -57,6 +57,7 @@ export interface Database {
           payment_method: string | null
           cash_collected: number | null
           closer: string | null
+          setter: string | null
           installment_count: number | null
           initial_payment: number | null
           created_at: string
@@ -80,6 +81,7 @@ export interface Database {
           payment_method?: string | null
           cash_collected?: number | null
           closer?: string | null
+          setter?: string | null
           installment_count?: number | null
           initial_payment?: number | null
           created_at?: string
@@ -103,6 +105,7 @@ export interface Database {
           payment_method?: string | null
           cash_collected?: number | null
           closer?: string | null
+          setter?: string | null
           installment_count?: number | null
           initial_payment?: number | null
           created_at?: string
