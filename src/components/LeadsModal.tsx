@@ -1,4 +1,4 @@
-import { X, User, Phone, Mail, Calendar, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { X, User, Calendar, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -107,30 +107,27 @@ export default function LeadsModal({ isOpen, onClose, leads, title, subtitle }: 
                               <User className="text-white" size={20} />
                             </div>
                             <div>
-                              <h3 className="text-lg font-bold text-gray-900">{lead.name}</h3>
-                              {lead.setter && (
-                                <p className="text-sm text-gray-600">
-                                  <span className="font-semibold">Setter:</span> {lead.setter}
-                                </p>
-                              )}
+                              <h3 className="text-lg font-bold text-gray-900">
+                                {lead.first_name} {lead.last_name}
+                              </h3>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                                {lead.setter && (
+                                  <p className="text-sm text-gray-600">
+                                    <span className="font-semibold">Setter:</span> {lead.setter}
+                                  </p>
+                                )}
+                                {lead.closer && (
+                                  <p className="text-sm text-gray-600">
+                                    <span className="font-semibold">Closer:</span> {lead.closer}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {getStatusBadge(lead)}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {lead.email && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Mail size={16} className="text-blue-500 shrink-0" />
-                              <span className="truncate">{lead.email}</span>
-                            </div>
-                          )}
-                          {lead.phone && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Phone size={16} className="text-green-500 shrink-0" />
-                              <span>{lead.phone}</span>
-                            </div>
-                          )}
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar size={16} className="text-orange-500 shrink-0" />
                             <span>
@@ -147,12 +144,20 @@ export default function LeadsModal({ isOpen, onClose, leads, title, subtitle }: 
                               </span>
                             </div>
                           )}
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="font-semibold">Formulario:</span> {lead.form_type}
+                          </div>
+                          {lead.result && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <span className="font-semibold">Resultado:</span> {lead.result}
+                            </div>
+                          )}
                         </div>
 
-                        {lead.notes && (
+                        {lead.observations && (
                           <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                            <p className="text-xs text-gray-500 font-semibold mb-1">Notas</p>
-                            <p className="text-sm text-gray-700">{lead.notes}</p>
+                            <p className="text-xs text-gray-500 font-semibold mb-1">Observaciones</p>
+                            <p className="text-sm text-gray-700">{lead.observations}</p>
                           </div>
                         )}
                       </div>
