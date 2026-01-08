@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Database } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
+import LeadsModal from './LeadsModal';
 import type { Database as DB } from '../lib/database.types';
 
 type Lead = DB['public']['Tables']['leads']['Row'];
@@ -9,15 +10,24 @@ type MetaLead = DB['public']['Tables']['meta_leads']['Row'];
 
 interface MonthlyComparisonProps {
   refreshTrigger: number;
+  leads: Lead[];
 }
 
-export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonProps) {
+export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }: MonthlyComparisonProps) {
   const { currentProject } = useProject();
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<Lead[]>(propsLeads);
   const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState<Lead[]>([]);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalSubtitle, setModalSubtitle] = useState('');
+
+  useEffect(() => {
+    setLeads(propsLeads);
+  }, [propsLeads]);
 
   useEffect(() => {
     if (currentProject) {
@@ -29,21 +39,13 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
     if (!currentProject) return;
 
     try {
-      const [leadsResponse, metaLeadsResponse] = await Promise.all([
-        supabase
-          .from('leads')
-          .select('*')
-          .eq('project_id', currentProject.id),
-        supabase
-          .from('meta_leads')
-          .select('*')
-          .eq('project_id', currentProject.id)
-      ]);
+      const metaLeadsResponse = await supabase
+        .from('meta_leads')
+        .select('*')
+        .eq('project_id', currentProject.id);
 
-      if (leadsResponse.error) throw leadsResponse.error;
       if (metaLeadsResponse.error) throw metaLeadsResponse.error;
 
-      setLeads(leadsResponse.data || []);
       setMetaLeads(metaLeadsResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -138,6 +140,8 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
     const monthlyData: {
       [key: string]: {
         month: string;
+        year: number;
+        monthIndex: number;
         manualLeads: number;
         metaLeads: number;
         sales: number;
@@ -156,6 +160,8 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
 
       monthlyData[key] = {
         month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        year: date.getFullYear(),
+        monthIndex: date.getMonth(),
         manualLeads: 0,
         metaLeads: 0,
         sales: 0,
@@ -188,6 +194,49 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
     });
 
     return Object.values(monthlyData);
+  };
+
+  const handleWeekClick = (weekIndex: number) => {
+    const getMonday = (date: Date) => {
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    };
+
+    const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1);
+    const monday = getMonday(new Date(firstDayOfMonth));
+
+    const weekStart = new Date(monday);
+    weekStart.setDate(weekStart.getDate() + (weekIndex * 7));
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    const weekLeads = leads.filter(lead => {
+      const entryDate = new Date(lead.entry_date);
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
+
+    setModalTitle(`Semana ${weekIndex + 1} - ${getMonthName(selectedMonth)} ${selectedYear}`);
+    setModalSubtitle(`${weekStart.toLocaleDateString('es-ES')} - ${weekEnd.toLocaleDateString('es-ES')}`);
+    setSelectedLeads(weekLeads);
+    setModalOpen(true);
+  };
+
+  const handleMonthClick = (year: number, monthIndex: number) => {
+    const monthStart = new Date(year, monthIndex, 1);
+    const monthEnd = new Date(year, monthIndex + 1, 0);
+
+    const monthLeads = leads.filter(lead => {
+      const entryDate = new Date(lead.entry_date);
+      return entryDate >= monthStart && entryDate <= monthEnd;
+    });
+
+    const monthName = monthStart.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    setModalTitle(monthName.charAt(0).toUpperCase() + monthName.slice(1));
+    setModalSubtitle(`${monthStart.toLocaleDateString('es-ES')} - ${monthEnd.toLocaleDateString('es-ES')}`);
+    setSelectedLeads(monthLeads);
+    setModalOpen(true);
   };
 
   if (loading) {
@@ -256,7 +305,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
                   const manualPercentage = totalLeads > 0 ? (data.manualLeads / maxWeeklyLeads) * 100 : 0;
 
                   return (
-                    <div key={index} className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[70px]">
+                    <div
+                      key={index}
+                      onClick={() => handleWeekClick(index)}
+                      className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[70px] cursor-pointer transition-transform hover:scale-105"
+                    >
                       <div className="text-center mb-2 md:mb-4">
                         <p className="text-base md:text-lg font-bold text-gray-900">{totalLeads}</p>
                         <p className="text-xs text-gray-500">total</p>
@@ -337,7 +390,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
                 const manualPercentage = totalLeads > 0 ? (data.manualLeads / maxMonthlyLeads) * 100 : 0;
 
                 return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px]">
+                  <div
+                    key={index}
+                    onClick={() => handleMonthClick(data.year, data.monthIndex)}
+                    className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px] cursor-pointer transition-transform hover:scale-105"
+                  >
                     <div className="text-center mb-1 md:mb-2">
                       <p className="text-sm md:text-base font-bold text-gray-900">{totalLeads}</p>
                       <p className="text-xs text-gray-500">total</p>
@@ -415,7 +472,11 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
                 const revenuePercentage = data.revenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
 
                 return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px]">
+                  <div
+                    key={index}
+                    onClick={() => handleMonthClick(data.year, data.monthIndex)}
+                    className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px] cursor-pointer transition-transform hover:scale-105"
+                  >
                     <div className="text-center mb-1 md:mb-2">
                       <p className="text-xs md:text-sm font-bold text-gray-900">€{data.revenue.toFixed(0)}</p>
                       <p className="text-xs text-gray-500">total</p>
@@ -460,6 +521,14 @@ export default function MonthlyComparison({ refreshTrigger }: MonthlyComparisonP
           </div>
         </div>
       </div>
+
+      <LeadsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        leads={selectedLeads}
+        title={modalTitle}
+        subtitle={modalSubtitle}
+      />
     </div>
   );
 }

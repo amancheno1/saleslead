@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
 import MonthlyComparison from './MonthlyComparison';
+import LeadsModal from './LeadsModal';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -19,6 +20,10 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
   const [leads, setLeads] = useState<Lead[]>([]);
   const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState<Lead[]>([]);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalSubtitle, setModalSubtitle] = useState('');
 
   useEffect(() => {
     if (currentProject) {
@@ -147,6 +152,36 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       closeRate,
       leadsByWeek
     };
+  };
+
+  const handleWeekClick = (weekIndex: number) => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const getMonday = (date: Date) => {
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    };
+
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const monday = getMonday(new Date(firstDayOfMonth));
+
+    const weekStart = new Date(monday);
+    weekStart.setDate(weekStart.getDate() + (weekIndex * 7));
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    const weekLeads = leads.filter(lead => {
+      const entryDate = new Date(lead.entry_date);
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
+
+    setModalTitle(`Semana ${weekIndex + 1}`);
+    setModalSubtitle(`${weekStart.toLocaleDateString('es-ES')} - ${weekEnd.toLocaleDateString('es-ES')}`);
+    setSelectedLeads(weekLeads);
+    setModalOpen(true);
   };
 
   const exportDashboardToExcel = () => {
@@ -341,7 +376,11 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                 <div className="space-y-4">
                   <h3 className="text-lg font-black text-gray-900 mb-4 uppercase tracking-wide">Desglose Semanal</h3>
                   {metrics.leadsByWeek.map((weekData, index) => (
-                    <div key={weekData.week} className="group relative overflow-hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300">
+                    <div
+                      key={weekData.week}
+                      onClick={() => handleWeekClick(index)}
+                      className="group relative overflow-hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-3">
@@ -661,9 +700,17 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
               <p className="text-sm text-gray-600 font-medium">Evolución de los últimos 6 meses</p>
             </div>
           </div>
-          <MonthlyComparison refreshTrigger={refreshTrigger} />
+          <MonthlyComparison refreshTrigger={refreshTrigger} leads={leads} />
         </div>
       </div>
+
+      <LeadsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        leads={selectedLeads}
+        title={modalTitle}
+        subtitle={modalSubtitle}
+      />
     </div>
   );
 }
