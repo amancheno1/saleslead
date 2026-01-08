@@ -58,7 +58,18 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setProjects(data || []);
 
       if (data && data.length > 0 && !currentProject) {
-        setCurrentProjectState(data[0]);
+        const savedProjectId = localStorage.getItem('currentProjectId');
+
+        if (savedProjectId) {
+          const savedProject = data.find(p => p.id === savedProjectId);
+          if (savedProject) {
+            setCurrentProjectState(savedProject);
+          } else {
+            setCurrentProjectState(data[0]);
+          }
+        } else {
+          setCurrentProjectState(data[0]);
+        }
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
