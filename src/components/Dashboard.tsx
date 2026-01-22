@@ -131,7 +131,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
         totalLeads: totalWeekLeads,
         scheduledLeads: weekScheduledLeads,
         goal: weeklyGoal,
-        percentage: weekMetaLeads > 0 ? (weekScheduledLeads / weekMetaLeads) * 100 : 0
+        percentage: totalWeekLeads > 0 ? (weekScheduledLeads / totalWeekLeads) * 100 : 0
       });
     }
 
