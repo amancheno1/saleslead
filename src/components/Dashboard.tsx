@@ -131,7 +131,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
         totalLeads: totalWeekLeads,
         scheduledLeads: weekScheduledLeads,
         goal: weeklyGoal,
-        percentage: weeklyGoal > 0 ? (totalWeekLeads / weeklyGoal) * 100 : 0
+        percentage: weekMetaLeads > 0 ? (weekScheduledLeads / weekMetaLeads) * 100 : 0
       });
     }
 
@@ -232,17 +232,18 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       'Total Leads': week.totalLeads,
       'Agendados': week.scheduledLeads,
       'Meta': week.goal,
-      'Cumplimiento': `${week.percentage.toFixed(1)}%`
+      '% Agendados': `${week.percentage.toFixed(1)}%`
     }));
 
+    const totalMetaLeads = metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0);
     const totalRow = {
       'Semana': 'TOTAL DEL MES',
-      'Leads Meta': metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0),
+      'Leads Meta': totalMetaLeads,
       'Leads Manuales': metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0),
       'Total Leads': metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0),
       'Agendados': metrics.scheduled,
       'Meta': metrics.monthlyGoal,
-      'Cumplimiento': `${((metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0) / metrics.monthlyGoal) * 100).toFixed(1)}%`
+      '% Agendados': totalMetaLeads > 0 ? `${((metrics.scheduled / totalMetaLeads) * 100).toFixed(1)}%` : '0%'
     };
 
     weeklyData.push(totalRow);
@@ -408,7 +409,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                                 weekData.percentage >= 100 ? 'text-green-600' :
                                 weekData.percentage >= 80 ? 'text-orange-600' : 'text-red-600'
                               }`}>
-                                {weekData.percentage.toFixed(0)}% cumplido
+                                {weekData.percentage.toFixed(0)}% agendados
                               </p>
                             </div>
                           </div>
