@@ -131,7 +131,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
         totalLeads: totalWeekLeads,
         scheduledLeads: weekScheduledLeads,
         goal: weeklyGoal,
-        percentage: totalWeekLeads > 0 ? (weekScheduledLeads / totalWeekLeads) * 100 : 0
+        percentage: weekManualLeads > 0 ? (weekScheduledLeads / weekManualLeads) * 100 : 0
       });
     }
 
@@ -236,14 +236,15 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     }));
 
     const totalMetaLeads = metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0);
+    const totalManualLeads = metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0);
     const totalRow = {
       'Semana': 'TOTAL DEL MES',
       'Leads Meta': totalMetaLeads,
-      'Leads Manuales': metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0),
+      'Leads Manuales': totalManualLeads,
       'Total Leads': metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0),
       'Agendados': metrics.scheduled,
       'Meta': metrics.monthlyGoal,
-      '% Agendados': totalMetaLeads > 0 ? `${((metrics.scheduled / totalMetaLeads) * 100).toFixed(1)}%` : '0%'
+      '% Agendados': totalManualLeads > 0 ? `${((metrics.scheduled / totalManualLeads) * 100).toFixed(1)}%` : '0%'
     };
 
     weeklyData.push(totalRow);
@@ -399,7 +400,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-gray-600 font-semibold mb-1">
-                              <span className="text-blue-600">{weekData.metaLeads} Leads Meta</span>
+                              <span className="text-blue-600">{weekData.manualLeads} Leads Agregados</span>
                             </p>
                             <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{weekData.scheduledLeads}</p>
                             <p className="text-xs text-orange-600 font-bold mt-1">Agendados</p>
@@ -436,8 +437,8 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                           <p className="text-xs md:text-sm font-bold text-white/90 uppercase tracking-wide mb-3 md:mb-2">Total del Mes</p>
                           <div className="flex items-center gap-3 md:gap-4 flex-wrap">
                             <div>
-                              <p className="text-xs text-white/70 mb-1">Leads Semanales</p>
-                              <p className="text-xl md:text-2xl font-black text-blue-200">{metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0)}</p>
+                              <p className="text-xs text-white/70 mb-1">Total Leads</p>
+                              <p className="text-xl md:text-2xl font-black text-blue-200">{metrics.totalLeads}</p>
                             </div>
                             <div className="text-white/50 text-2xl md:text-3xl font-black">→</div>
                             <div>
@@ -447,12 +448,14 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                           </div>
                         </div>
                         <div className="text-left md:text-right shrink-0">
-                          <p className="text-xs text-white/70 mb-1 md:mb-2">Total General</p>
-                          <p className="text-4xl md:text-6xl font-black text-white mb-1 md:mb-2">{metrics.scheduled}</p>
+                          <p className="text-xs text-white/70 mb-1 md:mb-2">% Agendados</p>
+                          <p className="text-4xl md:text-6xl font-black text-white mb-1 md:mb-2">
+                            {metrics.totalLeads > 0
+                              ? ((metrics.scheduled / metrics.totalLeads) * 100).toFixed(1)
+                              : 0}%
+                          </p>
                           <p className="text-xs md:text-sm text-white/80 font-bold">
-                            {metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0) > 0
-                              ? ((metrics.scheduled / metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0)) * 100).toFixed(1)
-                              : 0}% sobre leads Meta
+                            {metrics.scheduled} de {metrics.totalLeads} leads
                           </p>
                         </div>
                       </div>
