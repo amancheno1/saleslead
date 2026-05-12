@@ -74,10 +74,10 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40"></div>
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -97,8 +97,8 @@ export default function Auth() {
 
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-lg opacity-75"></div>
-              <div className="relative p-5 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl blur-lg opacity-75"></div>
+              <div className="relative p-5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl shadow-xl">
                 {currentView === 'login' && <LogIn className="text-white" size={36} />}
                 {currentView === 'signup' && <UserPlus className="text-white" size={36} />}
                 {currentView === 'forgot-password' && <Send className="text-white" size={36} />}
@@ -107,7 +107,7 @@ export default function Auth() {
           </div>
 
           <h1 className="text-4xl font-black text-center text-gray-900 mb-2 tracking-tight">
-            Lead Tracker
+            Amaogoia Louvier
           </h1>
           <p className="text-center text-gray-600 font-semibold mb-8">
             {currentView === 'login' && 'Inicia sesión en tu cuenta'}

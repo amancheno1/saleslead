@@ -45,6 +45,8 @@ export interface Database {
           user_id: string | null
           first_name: string
           last_name: string
+          phone: string | null
+          email: string | null
           form_type: string
           entry_date: string
           contact_date: string | null
@@ -69,6 +71,8 @@ export interface Database {
           user_id?: string | null
           first_name: string
           last_name: string
+          phone?: string | null
+          email?: string | null
           form_type: string
           entry_date?: string
           contact_date?: string | null
@@ -93,6 +97,8 @@ export interface Database {
           user_id?: string | null
           first_name?: string
           last_name?: string
+          phone?: string | null
+          email?: string | null
           form_type?: string
           entry_date?: string
           contact_date?: string | null

@@ -1,7 +1,7 @@
 {
-  "name": "Amz Kickstart",
-  "short_name": "Kickstart",
-  "description": "Sistema de gestión de leads y ventas",
+  "name": "Amaogoia Louvier - Closer de Ventas",
+  "short_name": "Amaogoia",
+  "description": "Sistema de gestion de leads y ventas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#2563eb",
