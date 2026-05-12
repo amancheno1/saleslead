@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Database as DatabaseIcon, UserCog, LayoutDashboard } from 'lucide-react';
+import { Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Calendar, UserCog, LayoutDashboard, Clock, Zap } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -9,14 +9,16 @@ import LeadForm from './components/LeadForm';
 import Settings from './components/Settings';
 import Billing from './components/Billing';
 import Commissions from './components/Commissions';
-import MetaLeads from './components/MetaLeads';
+import CalendarView from './components/CalendarView';
+import FollowUps from './components/FollowUps';
+import Automations from './components/Automations';
 import AdminDashboard from './components/AdminDashboard';
 import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
-type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'team';
+type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'calendar' | 'follow-ups' | 'automations' | 'settings' | 'team';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -65,7 +67,7 @@ function App() {
       }}
       className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all w-full font-semibold ${
         active
-          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 scale-105'
           : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 hover:scale-102'
       }`}
     >
@@ -106,7 +108,7 @@ function App() {
         <div className="text-center max-w-md bg-white rounded-2xl shadow-xl p-8">
           <img src="/favicon.svg" alt="Amz Kickstart Logo" className="w-20 h-20 mx-auto mb-4 shadow-lg rounded-2xl" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Amz Kickstart</h2>
-          <p className="text-gray-600 mb-6">No tienes proyectos todavía. Crea tu primer proyecto para comenzar.</p>
+          <p className="text-gray-600 mb-6">No tienes proyectos todavia. Crea tu primer proyecto para comenzar.</p>
           <div className="mb-4">
             <ProjectSelector />
           </div>
@@ -114,7 +116,7 @@ function App() {
             onClick={handleSignOut}
             className="mt-4 text-sm text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Cerrar Sesión
+            Cerrar Sesion
           </button>
         </div>
       </div>
@@ -168,8 +170,26 @@ function App() {
                 active={currentView === 'add-lead'}
               />
               <NavButton
+                icon={Calendar}
+                label="Calendario"
+                view="calendar"
+                active={currentView === 'calendar'}
+              />
+              <NavButton
+                icon={Clock}
+                label="Seguimientos"
+                view="follow-ups"
+                active={currentView === 'follow-ups'}
+              />
+              <NavButton
+                icon={Zap}
+                label="Automatizaciones"
+                view="automations"
+                active={currentView === 'automations'}
+              />
+              <NavButton
                 icon={DollarSign}
-                label="Facturación"
+                label="Facturacion"
                 view="billing"
                 active={currentView === 'billing'}
               />
@@ -180,12 +200,6 @@ function App() {
                 active={currentView === 'commissions'}
               />
               <NavButton
-                icon={DatabaseIcon}
-                label="Leads Meta"
-                view="meta-leads"
-                active={currentView === 'meta-leads'}
-              />
-              <NavButton
                 icon={UserCog}
                 label="Equipo"
                 view="team"
@@ -194,7 +208,7 @@ function App() {
               {userRole === 'owner' && (
                 <NavButton
                   icon={SettingsIcon}
-                  label="Configuración"
+                  label="Configuracion"
                   view="settings"
                   active={currentView === 'settings'}
                 />
@@ -207,7 +221,7 @@ function App() {
                 className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 transition-all w-full font-semibold hover:shadow-lg hover:shadow-red-500/10"
               >
                 <LogOut size={22} className="group-hover:scale-110 transition-transform" />
-                <span className="tracking-wide">Cerrar Sesión</span>
+                <span className="tracking-wide">Cerrar Sesion</span>
               </button>
             </div>
           </div>
@@ -234,11 +248,13 @@ function App() {
                 {currentView === 'dashboard' && 'Dashboard'}
                 {currentView === 'leads' && 'Leads'}
                 {currentView === 'add-lead' && (editingLead ? 'Editar Lead' : 'Agregar Lead')}
-                {currentView === 'billing' && 'Facturación'}
+                {currentView === 'calendar' && 'Calendario'}
+                {currentView === 'follow-ups' && 'Seguimientos'}
+                {currentView === 'automations' && 'Automatizaciones'}
+                {currentView === 'billing' && 'Facturacion'}
                 {currentView === 'commissions' && 'Comisiones'}
-                {currentView === 'meta-leads' && 'Leads Meta'}
                 {currentView === 'team' && 'Equipo'}
-                {currentView === 'settings' && 'Configuración'}
+                {currentView === 'settings' && 'Configuracion'}
               </h2>
             </div>
             <div className="w-6" />
@@ -247,7 +263,7 @@ function App() {
           <main className="flex-1 p-4 md:p-8 lg:p-10">
             <div className="max-w-[1800px] mx-auto">
               {currentView === 'dashboard' && (
-                <Dashboard refreshTrigger={refreshTrigger} onNavigate={setCurrentView} />
+                <Dashboard refreshTrigger={refreshTrigger} onNavigate={(view: string) => setCurrentView(view as View)} />
               )}
 
               {currentView === 'leads' && (
@@ -267,7 +283,7 @@ function App() {
                       {editingLead ? 'Editar Lead' : 'Agregar Nuevo Lead'}
                     </h2>
                     <p className="text-sm md:text-lg text-gray-600 font-medium">
-                      {editingLead ? 'Actualiza la información del lead' : 'Completa el formulario para registrar un nuevo lead'}
+                      {editingLead ? 'Actualiza la informacion del lead' : 'Completa el formulario para registrar un nuevo lead'}
                     </p>
                   </div>
                   <LeadForm
@@ -278,11 +294,41 @@ function App() {
                 </div>
               )}
 
+              {currentView === 'calendar' && (
+                <div>
+                  <div className="mb-6 md:mb-8">
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Calendario</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Visualiza llamadas agendadas y seguimientos</p>
+                  </div>
+                  <CalendarView />
+                </div>
+              )}
+
+              {currentView === 'follow-ups' && (
+                <div>
+                  <div className="mb-6 md:mb-8">
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Seguimientos</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Gestiona el seguimiento a tus leads</p>
+                  </div>
+                  <FollowUps />
+                </div>
+              )}
+
+              {currentView === 'automations' && (
+                <div>
+                  <div className="mb-6 md:mb-8 hidden md:block">
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Automatizaciones</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Flujos automaticos con ManyChat</p>
+                  </div>
+                  <Automations />
+                </div>
+              )}
+
               {currentView === 'billing' && (
                 <div>
                   <div className="mb-6 md:mb-8 hidden md:block">
-                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Facturación</h2>
-                    <p className="text-sm md:text-lg text-gray-600 font-medium">Datos económicos y financieros</p>
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Facturacion</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Datos economicos y financieros</p>
                   </div>
                   <Billing refreshTrigger={refreshTrigger} />
                 </div>
@@ -292,19 +338,9 @@ function App() {
                 <div>
                   <div className="mb-6 md:mb-8 hidden md:block">
                     <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Comisiones</h2>
-                    <p className="text-sm md:text-lg text-gray-600 font-medium">Cálculo de comisiones</p>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Calculo de comisiones</p>
                   </div>
                   <Commissions refreshTrigger={refreshTrigger} />
-                </div>
-              )}
-
-              {currentView === 'meta-leads' && (
-                <div>
-                  <div className="mb-6 md:mb-8 hidden md:block">
-                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Leads de Meta</h2>
-                    <p className="text-sm md:text-lg text-gray-600 font-medium">Registro semanal de leads de formularios Meta</p>
-                  </div>
-                  <MetaLeads />
                 </div>
               )}
 
@@ -313,8 +349,8 @@ function App() {
               {currentView === 'settings' && (
                 <div>
                   <div className="mb-6 md:mb-8">
-                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Configuración</h2>
-                    <p className="text-sm md:text-lg text-gray-600 font-medium">Ajusta los parámetros del proyecto</p>
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Configuracion</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Ajusta los parametros del proyecto</p>
                   </div>
                   <Settings onUpdate={handleSettingsUpdate} />
                 </div>
@@ -325,7 +361,7 @@ function App() {
           <footer className="bg-white border-t border-gray-200 py-4 px-4 md:px-8">
             <div className="max-w-[1800px] mx-auto text-center">
               <p className="text-sm text-gray-600">
-                © {new Date().getFullYear()} <span className="font-semibold text-gray-900">Alejandro Mancheño Rey</span>. Todos los derechos reservados.
+                © {new Date().getFullYear()} <span className="font-semibold text-gray-900">Alejandro Mancheno Rey</span>. Todos los derechos reservados.
               </p>
             </div>
           </footer>

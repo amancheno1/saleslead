@@ -1,23 +1,18 @@
 import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Database } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useProject } from '../context/ProjectContext';
 import LeadsModal from './LeadsModal';
 import type { Database as DB } from '../lib/database.types';
 
 type Lead = DB['public']['Tables']['leads']['Row'];
-type MetaLead = DB['public']['Tables']['meta_leads']['Row'];
 
 interface MonthlyComparisonProps {
   refreshTrigger: number;
   leads: Lead[];
 }
 
-export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }: MonthlyComparisonProps) {
-  const { currentProject } = useProject();
+export default function MonthlyComparison({ leads: propsLeads }: MonthlyComparisonProps) {
   const [leads, setLeads] = useState<Lead[]>(propsLeads);
-  const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,31 +23,6 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
   useEffect(() => {
     setLeads(propsLeads);
   }, [propsLeads]);
-
-  useEffect(() => {
-    if (currentProject) {
-      fetchData();
-    }
-  }, [refreshTrigger, currentProject]);
-
-  const fetchData = async () => {
-    if (!currentProject) return;
-
-    try {
-      const metaLeadsResponse = await supabase
-        .from('meta_leads')
-        .select('*')
-        .eq('project_id', currentProject.id);
-
-      if (metaLeadsResponse.error) throw metaLeadsResponse.error;
-
-      setMetaLeads(metaLeadsResponse.data || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getWeekNumber = (date: Date) => {
     const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
@@ -82,7 +52,7 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
         weekNumber: number;
         totalLeads: number;
         scheduledLeads: number;
-        metaLeads: number;
+        noShowLeads: number;
         sales: number;
         revenue: number;
       };
@@ -91,7 +61,7 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
 
-    let currentDate = new Date(firstDayOfMonth);
+    const currentDate = new Date(firstDayOfMonth);
     const monday = getMonday(new Date(currentDate));
 
     for (let i = 0; i < 6; i++) {
@@ -111,7 +81,7 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
         weekNumber: weekNumber,
         totalLeads: 0,
         scheduledLeads: 0,
-        metaLeads: 0,
+        noShowLeads: 0,
         sales: 0,
         revenue: 0
       };
@@ -123,17 +93,13 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
           if (lead.scheduled_call_date) {
             weeksData[key].scheduledLeads += 1;
           }
+          if (lead.attended_meeting === 'no_show') {
+            weeksData[key].noShowLeads += 1;
+          }
           if (lead.sale_made) {
             weeksData[key].sales += 1;
             weeksData[key].revenue += lead.sale_amount || 0;
           }
-        }
-      });
-
-      metaLeads.forEach(metaLead => {
-        const metaWeekStart = new Date(metaLead.week_start_date);
-        if (metaWeekStart >= weekStart && metaWeekStart <= weekEnd) {
-          weeksData[key].metaLeads += metaLead.leads_count;
         }
       });
     }
@@ -149,7 +115,7 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
         monthIndex: number;
         totalLeads: number;
         scheduledLeads: number;
-        metaLeads: number;
+        noShowLeads: number;
         sales: number;
         revenue: number;
         cashCollected: number;
@@ -170,7 +136,7 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
         monthIndex: date.getMonth(),
         totalLeads: 0,
         scheduledLeads: 0,
-        metaLeads: 0,
+        noShowLeads: 0,
         sales: 0,
         revenue: 0,
         cashCollected: 0
@@ -186,20 +152,14 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
         if (lead.scheduled_call_date) {
           monthlyData[key].scheduledLeads += 1;
         }
+        if (lead.attended_meeting === 'no_show') {
+          monthlyData[key].noShowLeads += 1;
+        }
         if (lead.sale_made) {
           monthlyData[key].sales += 1;
           monthlyData[key].revenue += lead.sale_amount || 0;
           monthlyData[key].cashCollected += lead.cash_collected || 0;
         }
-      }
-    });
-
-    metaLeads.forEach(metaLead => {
-      const metaDate = new Date(metaLead.week_start_date);
-      const key = `${metaDate.getFullYear()}-${metaDate.getMonth()}`;
-
-      if (monthlyData[key]) {
-        monthlyData[key].metaLeads += metaLead.leads_count;
       }
     });
 
@@ -257,12 +217,12 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
   const monthlyData = calculateMonthlyData();
 
   const maxWeeklyLeads = Math.max(
-    ...weeklyData.map(d => Math.max(d.totalLeads, d.scheduledLeads)),
+    ...weeklyData.map(d => Math.max(d.scheduledLeads, d.noShowLeads)),
     1
   );
 
   const maxMonthlyLeads = Math.max(
-    ...monthlyData.map(d => Math.max(d.totalLeads, d.scheduledLeads)),
+    ...monthlyData.map(d => Math.max(d.scheduledLeads, d.noShowLeads)),
     1
   );
 
@@ -276,8 +236,8 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
             <BarChart3 className="text-blue-600" size={24} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparación Semanal</h3>
-            <p className="text-xs md:text-sm text-gray-600">Total Leads vs Agendados</p>
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparacion Semanal</h3>
+            <p className="text-xs md:text-sm text-gray-600">Agendadas vs No Show</p>
           </div>
           <div className="flex gap-2">
             <select
@@ -310,8 +270,8 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
             <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
               <div className="flex items-end justify-around gap-2 md:gap-4 min-w-[500px] md:min-w-0 h-64 md:h-80 pb-4">
                 {weeklyData.map((data, index) => {
-                  const totalLeadsPercentage = data.totalLeads > 0 ? (data.totalLeads / maxWeeklyLeads) * 100 : 0;
                   const scheduledPercentage = data.scheduledLeads > 0 ? (data.scheduledLeads / maxWeeklyLeads) * 100 : 0;
+                  const noShowPercentage = data.noShowLeads > 0 ? (data.noShowLeads / maxWeeklyLeads) * 100 : 0;
 
                   return (
                     <div
@@ -320,28 +280,13 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
                       className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[70px] cursor-pointer transition-transform hover:scale-105"
                     >
                       <div className="text-center mb-2 md:mb-4">
-                        <p className="text-base md:text-lg font-bold text-gray-900">{data.totalLeads}</p>
-                        <p className="text-xs text-gray-500">total</p>
+                        <p className="text-base md:text-lg font-bold text-gray-900">{data.scheduledLeads}</p>
+                        <p className="text-xs text-gray-500">agendadas</p>
                       </div>
                       <div className="w-full flex gap-0.5 md:gap-1 items-end justify-center h-32 md:h-48">
                         <div className="relative flex flex-col justify-end w-1/2 h-full">
                           <div
                             className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500 hover:from-blue-600 hover:to-blue-500 shadow-lg relative group"
-                            style={{ height: `${totalLeadsPercentage}%`, minHeight: data.totalLeads > 0 ? '20px' : '0' }}
-                          >
-                            {data.totalLeads > 0 && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-white font-bold text-xs md:text-sm">{data.totalLeads}</span>
-                              </div>
-                            )}
-                            <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                              Total Leads: {data.totalLeads}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="relative flex flex-col justify-end w-1/2 h-full">
-                          <div
-                            className="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg transition-all duration-500 hover:from-green-600 hover:to-green-500 shadow-lg relative group"
                             style={{ height: `${scheduledPercentage}%`, minHeight: data.scheduledLeads > 0 ? '20px' : '0' }}
                           >
                             {data.scheduledLeads > 0 && (
@@ -350,7 +295,22 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
                               </div>
                             )}
                             <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                              Agendados: {data.scheduledLeads}
+                              Agendadas: {data.scheduledLeads}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="relative flex flex-col justify-end w-1/2 h-full">
+                          <div
+                            className="w-full bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg transition-all duration-500 hover:from-red-600 hover:to-red-500 shadow-lg relative group"
+                            style={{ height: `${noShowPercentage}%`, minHeight: data.noShowLeads > 0 ? '20px' : '0' }}
+                          >
+                            {data.noShowLeads > 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-white font-bold text-xs md:text-sm">{data.noShowLeads}</span>
+                              </div>
+                            )}
+                            <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                              No Show: {data.noShowLeads}
                             </div>
                           </div>
                         </div>
@@ -368,11 +328,11 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
             <div className="pt-4 border-t border-gray-200 flex items-center justify-center flex-wrap gap-4 md:gap-6 text-xs md:text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-blue-500 to-blue-400 rounded"></div>
-                <span className="text-gray-600">Total Leads</span>
+                <span className="text-gray-600">Agendadas</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-green-500 to-green-400 rounded"></div>
-                <span className="text-gray-600">Agendados</span>
+                <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-red-500 to-red-400 rounded"></div>
+                <span className="text-gray-600">No Show</span>
               </div>
             </div>
           </div>
@@ -385,8 +345,8 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
             <Database className="text-blue-600" size={24} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparación Mensual (6 Meses)</h3>
-            <p className="text-xs md:text-sm text-gray-600">Evolución histórica</p>
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1">Comparacion Mensual (6 Meses)</h3>
+            <p className="text-xs md:text-sm text-gray-600">Agendadas vs No Show</p>
           </div>
         </div>
 
@@ -394,8 +354,8 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
           <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
             <div className="flex items-end justify-around gap-2 md:gap-4 min-w-[600px] md:min-w-0 h-64 md:h-80 pb-4 pt-4 md:pt-8">
               {monthlyData.map((data, index) => {
-                const totalLeadsPercentage = data.totalLeads > 0 ? (data.totalLeads / maxMonthlyLeads) * 100 : 0;
                 const scheduledPercentage = data.scheduledLeads > 0 ? (data.scheduledLeads / maxMonthlyLeads) * 100 : 0;
+                const noShowPercentage = data.noShowLeads > 0 ? (data.noShowLeads / maxMonthlyLeads) * 100 : 0;
 
                 return (
                   <div
@@ -404,28 +364,13 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
                     className="flex-1 flex flex-col items-center gap-1 md:gap-2 min-w-[80px] cursor-pointer transition-transform hover:scale-105"
                   >
                     <div className="text-center mb-1 md:mb-2">
-                      <p className="text-sm md:text-base font-bold text-gray-900">{data.totalLeads}</p>
-                      <p className="text-xs text-gray-500">total</p>
+                      <p className="text-sm md:text-base font-bold text-gray-900">{data.scheduledLeads}</p>
+                      <p className="text-xs text-gray-500">agendadas</p>
                     </div>
                     <div className="w-full flex gap-0.5 md:gap-1 items-end justify-center h-32 md:h-44">
                       <div className="relative flex flex-col justify-end w-1/2 h-full">
                         <div
                           className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500 hover:from-blue-600 hover:to-blue-500 shadow-lg relative group"
-                          style={{ height: `${totalLeadsPercentage}%`, minHeight: data.totalLeads > 0 ? '20px' : '0' }}
-                        >
-                          {data.totalLeads > 0 && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white font-bold text-xs md:text-sm">{data.totalLeads}</span>
-                            </div>
-                          )}
-                          <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                            Total Leads: {data.totalLeads}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="relative flex flex-col justify-end w-1/2 h-full">
-                        <div
-                          className="w-full bg-gradient-to-t from-orange-500 to-orange-400 rounded-t-lg transition-all duration-500 hover:from-orange-600 hover:to-orange-500 shadow-lg relative group"
                           style={{ height: `${scheduledPercentage}%`, minHeight: data.scheduledLeads > 0 ? '20px' : '0' }}
                         >
                           {data.scheduledLeads > 0 && (
@@ -434,7 +379,22 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
                             </div>
                           )}
                           <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                            Agendados: {data.scheduledLeads}
+                            Agendadas: {data.scheduledLeads}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="relative flex flex-col justify-end w-1/2 h-full">
+                        <div
+                          className="w-full bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg transition-all duration-500 hover:from-red-600 hover:to-red-500 shadow-lg relative group"
+                          style={{ height: `${noShowPercentage}%`, minHeight: data.noShowLeads > 0 ? '20px' : '0' }}
+                        >
+                          {data.noShowLeads > 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white font-bold text-xs md:text-sm">{data.noShowLeads}</span>
+                            </div>
+                          )}
+                          <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                            No Show: {data.noShowLeads}
                           </div>
                         </div>
                       </div>
@@ -452,11 +412,11 @@ export default function MonthlyComparison({ refreshTrigger, leads: propsLeads }:
           <div className="pt-4 border-t border-gray-200 flex items-center justify-center flex-wrap gap-4 md:gap-6 text-xs md:text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-blue-500 to-blue-400 rounded"></div>
-              <span className="text-gray-600">Total Leads</span>
+              <span className="text-gray-600">Agendadas</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-orange-500 to-orange-400 rounded"></div>
-              <span className="text-gray-600">Agendados</span>
+              <div className="w-3 h-3 md:w-4 md:h-4 bg-gradient-to-t from-red-500 to-red-400 rounded"></div>
+              <span className="text-gray-600">No Show</span>
             </div>
           </div>
         </div>

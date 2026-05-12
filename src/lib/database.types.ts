@@ -167,6 +167,91 @@ export interface Database {
           updated_at?: string
         }
       }
+      follow_ups: {
+        Row: {
+          id: string
+          project_id: string
+          lead_id: string
+          user_id: string
+          type: string
+          status: string
+          scheduled_date: string
+          scheduled_time: string | null
+          completed_at: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          lead_id: string
+          user_id: string
+          type?: string
+          status?: string
+          scheduled_date: string
+          scheduled_time?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          lead_id?: string
+          user_id?: string
+          type?: string
+          status?: string
+          scheduled_date?: string
+          scheduled_time?: string | null
+          completed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      automations: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          name: string
+          description: string | null
+          trigger_type: string
+          channel: string
+          is_active: boolean
+          steps: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          name: string
+          description?: string | null
+          trigger_type?: string
+          channel?: string
+          is_active?: boolean
+          steps?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          trigger_type?: string
+          channel?: string
+          is_active?: boolean
+          steps?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
       project_members: {
         Row: {
           id: string

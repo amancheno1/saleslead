@@ -8,17 +8,15 @@ import LeadsModal from './LeadsModal';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
-type MetaLead = Database['public']['Tables']['meta_leads']['Row'];
 
 interface DashboardProps {
   refreshTrigger: number;
-  onNavigate?: (view: 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'meta-leads' | 'settings' | 'team') => void;
+  onNavigate?: (view: string) => void;
 }
 
 export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps) {
   const { currentProject } = useProject();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [metaLeads, setMetaLeads] = useState<MetaLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<Lead[]>([]);
@@ -35,22 +33,14 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     if (!currentProject) return;
 
     try {
-      const [leadsResponse, metaLeadsResponse] = await Promise.all([
-        supabase
-          .from('leads')
-          .select('*')
-          .eq('project_id', currentProject.id),
-        supabase
-          .from('meta_leads')
-          .select('*')
-          .eq('project_id', currentProject.id)
-      ]);
+      const leadsResponse = await supabase
+        .from('leads')
+        .select('*')
+        .eq('project_id', currentProject.id);
 
       if (leadsResponse.error) throw leadsResponse.error;
-      if (metaLeadsResponse.error) throw metaLeadsResponse.error;
 
       setLeads(leadsResponse.data || []);
-      setMetaLeads(metaLeadsResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -81,6 +71,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
 
     const scheduledRate = monthlyGoal > 0 ? (scheduled / monthlyGoal) * 100 : 0;
     const showRate = scheduled > 0 ? (attended / scheduled) * 100 : 0;
+    const noShowRate = scheduled > 0 ? (noShow / scheduled) * 100 : 0;
     const closeRate = scheduled > 0 ? (sales / scheduled) * 100 : 0;
 
     const getMonday = (date: Date) => {
@@ -93,7 +84,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
     const monday = getMonday(new Date(firstDayOfMonth));
 
-    const leadsByWeek: { week: number; manualLeads: number; metaLeads: number; totalLeads: number; scheduledLeads: number; goal: number; percentage: number }[] = [];
+    const leadsByWeek: { week: number; leads: number; scheduledLeads: number; noShowLeads: number; goal: number; percentage: number }[] = [];
 
     for (let i = 0; i < 6; i++) {
       const weekStart = new Date(monday);
@@ -104,34 +95,21 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
 
-      const weekManualLeads = monthlyLeads.filter(lead => {
+      const weekLeads = monthlyLeads.filter(lead => {
         const entryDate = new Date(lead.entry_date);
         return entryDate >= weekStart && entryDate <= weekEnd;
-      }).length;
-
-      const weekScheduledLeads = monthlyLeads.filter(lead => {
-        const entryDate = new Date(lead.entry_date);
-        return entryDate >= weekStart && entryDate <= weekEnd && lead.scheduled_call_date;
-      }).length;
-
-      let weekMetaLeads = 0;
-      metaLeads.forEach(metaLead => {
-        const metaDate = new Date(metaLead.week_start_date);
-        if (metaDate >= weekStart && metaDate <= weekEnd) {
-          weekMetaLeads += metaLead.leads_count;
-        }
       });
 
-      const totalWeekLeads = weekManualLeads + weekMetaLeads;
+      const weekScheduledLeads = weekLeads.filter(l => l.scheduled_call_date).length;
+      const weekNoShowLeads = weekLeads.filter(l => l.attended_meeting === 'no_show').length;
 
       leadsByWeek.push({
         week: i + 1,
-        manualLeads: weekManualLeads,
-        metaLeads: weekMetaLeads,
-        totalLeads: totalWeekLeads,
+        leads: weekLeads.length,
         scheduledLeads: weekScheduledLeads,
+        noShowLeads: weekNoShowLeads,
         goal: weeklyGoal,
-        percentage: weekManualLeads > 0 ? (weekScheduledLeads / weekManualLeads) * 100 : 0
+        percentage: weekLeads.length > 0 ? (weekScheduledLeads / weekLeads.length) * 100 : 0
       });
     }
 
@@ -143,6 +121,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       attended,
       cancelled,
       noShow,
+      noShowRate,
       offersGiven,
       sales,
       totalRevenue,
@@ -227,24 +206,22 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
 
     const weeklyData = metrics.leadsByWeek.map(week => ({
       'Semana': `Semana ${week.week}`,
-      'Leads Meta': week.metaLeads,
-      'Leads Manuales': week.manualLeads,
-      'Total Leads': week.totalLeads,
+      'Leads': week.leads,
       'Agendados': week.scheduledLeads,
+      'No Show': week.noShowLeads,
+      'No Show Rate': week.scheduledLeads > 0 ? `${((week.noShowLeads / week.scheduledLeads) * 100).toFixed(1)}%` : '0%',
       'Meta': week.goal,
       '% Agendados': `${week.percentage.toFixed(1)}%`
     }));
 
-    const totalMetaLeads = metrics.leadsByWeek.reduce((sum, w) => sum + w.metaLeads, 0);
-    const totalManualLeads = metrics.leadsByWeek.reduce((sum, w) => sum + w.manualLeads, 0);
     const totalRow = {
       'Semana': 'TOTAL DEL MES',
-      'Leads Meta': totalMetaLeads,
-      'Leads Manuales': totalManualLeads,
-      'Total Leads': metrics.leadsByWeek.reduce((sum, w) => sum + w.totalLeads, 0),
+      'Leads': metrics.totalLeads,
       'Agendados': metrics.scheduled,
+      'No Show': metrics.noShow,
+      'No Show Rate': `${metrics.noShowRate.toFixed(1)}%`,
       'Meta': metrics.monthlyGoal,
-      '% Agendados': totalManualLeads > 0 ? `${((metrics.scheduled / totalManualLeads) * 100).toFixed(1)}%` : '0%'
+      '% Agendados': metrics.totalLeads > 0 ? `${((metrics.scheduled / metrics.totalLeads) * 100).toFixed(1)}%` : '0%'
     };
 
     weeklyData.push(totalRow);
@@ -399,18 +376,22 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm text-gray-600 font-semibold mb-1">
-                              <span className="text-blue-600">{weekData.manualLeads} Leads Agregados</span>
-                            </p>
-                            <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{weekData.scheduledLeads}</p>
-                            <p className="text-xs text-orange-600 font-bold mt-1">Agendados</p>
+                            <div className="flex items-center gap-4 justify-end mb-1">
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-blue-600">{weekData.scheduledLeads}</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase">Agendadas</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-red-500">{weekData.noShowLeads}</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase">No Show</p>
+                              </div>
+                            </div>
                             <div className="flex items-center gap-1 justify-end mt-2">
-                              {weekData.percentage >= 100 && <ArrowUp size={14} className="text-green-600" />}
-                              <p className={`text-sm font-black ${
-                                weekData.percentage >= 100 ? 'text-green-600' :
-                                weekData.percentage >= 80 ? 'text-orange-600' : 'text-red-600'
+                              <p className={`text-xs font-bold ${
+                                weekData.scheduledLeads > 0 && (weekData.noShowLeads / weekData.scheduledLeads) * 100 > 30
+                                  ? 'text-red-600' : 'text-green-600'
                               }`}>
-                                {weekData.percentage.toFixed(0)}% agendados
+                                {weekData.scheduledLeads > 0 ? ((weekData.noShowLeads / weekData.scheduledLeads) * 100).toFixed(0) : 0}% no show
                               </p>
                             </div>
                           </div>
@@ -515,13 +496,14 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                     </div>
                   </div>
 
-                  <div className="relative group/card overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-5 border-2 border-gray-300 hover:shadow-xl transition-all duration-300">
-                    <div className="absolute top-0 right-0 text-gray-300 opacity-30">
-                      <Clock size={80} />
+                  <div className="relative group/card overflow-hidden bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border-2 border-red-200 hover:shadow-xl transition-all duration-300">
+                    <div className="absolute top-0 right-0 text-red-200 opacity-20">
+                      <XCircle size={80} />
                     </div>
                     <div className="relative z-10">
                       <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">No Show</p>
-                      <p className="text-4xl font-black text-gray-700">{metrics.noShow}</p>
+                      <p className="text-4xl font-black text-red-600 mb-1">{metrics.noShow}</p>
+                      <p className="text-xs text-gray-600 font-semibold">{metrics.noShowRate.toFixed(0)}% no show rate</p>
                     </div>
                   </div>
                 </div>
@@ -643,17 +625,17 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden group/kpi bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <div className="relative overflow-hidden group/kpi bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                   <div className="absolute top-0 right-0 text-white/10">
-                    <CheckCircle size={100} />
+                    <XCircle size={100} />
                   </div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-black text-white/80 uppercase tracking-wider">Show Rate</span>
-                      <CheckCircle size={20} className="text-white/80" />
+                      <span className="text-xs font-black text-white/80 uppercase tracking-wider">No Show Rate</span>
+                      <XCircle size={20} className="text-white/80" />
                     </div>
-                    <p className="text-5xl font-black text-white mb-2">{metrics.showRate.toFixed(1)}%</p>
-                    <p className="text-sm text-white/80 font-bold">{metrics.attended} de {metrics.scheduled}</p>
+                    <p className="text-5xl font-black text-white mb-2">{metrics.noShowRate.toFixed(1)}%</p>
+                    <p className="text-sm text-white/80 font-bold">{metrics.noShow} de {metrics.scheduled} agendadas</p>
                   </div>
                 </div>
 
