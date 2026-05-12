@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Pencil, Trash2, Download, MessageCircle, Mail } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Pencil, Trash2, Download, Upload, MessageCircle, Mail, AlertCircle, CheckCircle, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
 import type { Database } from '../lib/database.types';
 
@@ -13,12 +14,20 @@ interface LeadsTableProps {
 }
 
 export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) {
+  const { user } = useAuth();
   const { currentProject } = useProject();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'total' | 'monthly'>('monthly');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState<any[]>([]);
+  const [importMapping, setImportMapping] = useState<{ [key: string]: string }>({});
+  const [importHeaders, setImportHeaders] = useState<string[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentProject) {
@@ -207,6 +216,136 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
     XLSX.writeFile(wb, fileName);
   };
 
+  const leadFields = [
+    { key: 'first_name', label: 'Nombre', required: true },
+    { key: 'last_name', label: 'Apellido', required: true },
+    { key: 'phone', label: 'Teléfono', required: false },
+    { key: 'email', label: 'Email', required: false },
+    { key: 'form_type', label: 'Tipo de Formulario', required: false },
+    { key: 'entry_date', label: 'Fecha de Entrada', required: false },
+    { key: 'contact_date', label: 'Fecha de Contacto', required: false },
+    { key: 'scheduled_call_date', label: 'Fecha Llamada Agendada', required: false },
+    { key: 'closer', label: 'Closer', required: false },
+    { key: 'observations', label: 'Observaciones', required: false },
+  ];
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = evt.target?.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      if (jsonData.length === 0) return;
+
+      const headers = Object.keys(jsonData[0] as object);
+      setImportHeaders(headers);
+      setImportData(jsonData);
+
+      const autoMapping: { [key: string]: string } = {};
+      const nameMatches: { [key: string]: string[] } = {
+        first_name: ['nombre', 'first_name', 'name', 'primer nombre'],
+        last_name: ['apellido', 'last_name', 'surname', 'apellidos'],
+        phone: ['telefono', 'teléfono', 'phone', 'celular', 'móvil', 'movil', 'whatsapp'],
+        email: ['email', 'correo', 'e-mail', 'mail'],
+        form_type: ['formulario', 'form', 'tipo', 'form_type', 'origen'],
+        entry_date: ['fecha', 'fecha de entrada', 'entry_date', 'date', 'fecha ingreso'],
+        contact_date: ['fecha contacto', 'contact_date', 'fecha de contacto'],
+        scheduled_call_date: ['llamada', 'llamada agendada', 'scheduled', 'fecha llamada'],
+        closer: ['closer', 'vendedor', 'asesor'],
+        observations: ['observaciones', 'notas', 'notes', 'observations', 'comentarios'],
+      };
+
+      headers.forEach(header => {
+        const lowerHeader = header.toLowerCase().trim();
+        for (const [field, matches] of Object.entries(nameMatches)) {
+          if (matches.some(m => lowerHeader.includes(m))) {
+            if (!autoMapping[field]) {
+              autoMapping[field] = header;
+            }
+          }
+        }
+      });
+
+      setImportMapping(autoMapping);
+      setShowImportModal(true);
+    };
+    reader.readAsBinaryString(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleImport = async () => {
+    if (!currentProject || !user) return;
+    setImporting(true);
+    setImportResult(null);
+
+    let success = 0;
+    let errors = 0;
+
+    for (const row of importData) {
+      try {
+        const firstName = importMapping.first_name ? String(row[importMapping.first_name] || '').trim() : '';
+        const lastName = importMapping.last_name ? String(row[importMapping.last_name] || '').trim() : '';
+
+        if (!firstName && !lastName) {
+          errors++;
+          continue;
+        }
+
+        const parseDate = (val: any): string | null => {
+          if (!val) return null;
+          if (typeof val === 'number') {
+            const date = XLSX.SSF.parse_date_code(val);
+            if (date) return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+          }
+          const str = String(val).trim();
+          const parsed = new Date(str);
+          if (!isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
+          const parts = str.split(/[/.-]/);
+          if (parts.length === 3) {
+            const [d, m, y] = parts;
+            const dateObj = new Date(parseInt(y.length === 2 ? '20' + y : y), parseInt(m) - 1, parseInt(d));
+            if (!isNaN(dateObj.getTime())) return dateObj.toISOString().split('T')[0];
+          }
+          return null;
+        };
+
+        const leadData: any = {
+          project_id: currentProject.id,
+          user_id: user.id,
+          first_name: firstName || 'Sin nombre',
+          last_name: lastName || '',
+          form_type: importMapping.form_type ? String(row[importMapping.form_type] || 'Importado') : 'Importado',
+          entry_date: (importMapping.entry_date ? parseDate(row[importMapping.entry_date]) : null) || new Date().toISOString().split('T')[0],
+          phone: importMapping.phone ? String(row[importMapping.phone] || '').trim() || null : null,
+          email: importMapping.email ? String(row[importMapping.email] || '').trim() || null : null,
+          contact_date: importMapping.contact_date ? parseDate(row[importMapping.contact_date]) : null,
+          scheduled_call_date: importMapping.scheduled_call_date ? parseDate(row[importMapping.scheduled_call_date]) : null,
+          closer: importMapping.closer ? String(row[importMapping.closer] || '').trim() || null : null,
+          observations: importMapping.observations ? String(row[importMapping.observations] || '').trim() || null : null,
+        };
+
+        const { error } = await supabase.from('leads').insert([leadData]);
+        if (error) {
+          errors++;
+        } else {
+          success++;
+        }
+      } catch {
+        errors++;
+      }
+    }
+
+    setImportResult({ success, errors });
+    setImporting(false);
+    if (success > 0) fetchLeads();
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Cargando leads...</div>;
   }
@@ -267,6 +406,20 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
             <div className="text-sm text-gray-600 font-medium">
               {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              <Upload size={18} />
+              Importar Excel
+            </button>
             <button
               onClick={exportToExcel}
               disabled={filteredLeads.length === 0}
@@ -396,6 +549,138 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         </div>
       )}
       </div>
+
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-white">Importar Leads desde Excel</h2>
+                <p className="text-sm text-blue-100 mt-1">{importData.length} filas detectadas</p>
+              </div>
+              <button
+                onClick={() => { setShowImportModal(false); setImportResult(null); }}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="text-white" size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+              {importResult ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="text-green-600" size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Importación Completada</h3>
+                  <p className="text-gray-600 mb-4">
+                    {importResult.success} leads importados correctamente
+                    {importResult.errors > 0 && `, ${importResult.errors} con errores`}
+                  </p>
+                  <button
+                    onClick={() => { setShowImportModal(false); setImportResult(null); }}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="text-blue-600 shrink-0 mt-0.5" size={20} />
+                      <div>
+                        <p className="text-sm font-bold text-blue-900">Mapea las columnas de tu archivo</p>
+                        <p className="text-xs text-blue-700 mt-1">
+                          Asigna cada columna de tu Excel al campo correspondiente. Los campos con * son obligatorios.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {leadFields.map(field => (
+                      <div key={field.key} className="flex items-center gap-4">
+                        <div className="w-48 shrink-0">
+                          <p className="text-sm font-bold text-gray-800">
+                            {field.label} {field.required && <span className="text-red-500">*</span>}
+                          </p>
+                        </div>
+                        <select
+                          value={importMapping[field.key] || ''}
+                          onChange={(e) => setImportMapping({ ...importMapping, [field.key]: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">-- No asignar --</option>
+                          {importHeaders.map(h => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+
+                  {importData.length > 0 && (
+                    <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden">
+                      <p className="text-xs font-bold text-gray-600 uppercase tracking-wide px-4 py-2 bg-gray-50 border-b border-gray-200">
+                        Vista previa (primeras 3 filas)
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-xs">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              {importHeaders.slice(0, 6).map(h => (
+                                <th key={h} className="px-3 py-2 text-left font-semibold text-gray-600">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {importData.slice(0, 3).map((row, i) => (
+                              <tr key={i}>
+                                {importHeaders.slice(0, 6).map(h => (
+                                  <td key={h} className="px-3 py-2 text-gray-700 truncate max-w-[150px]">
+                                    {String(row[h] || '')}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => setShowImportModal(false)}
+                      className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-bold text-sm"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleImport}
+                      disabled={importing || !importMapping.first_name}
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {importing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Importando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          Importar {importData.length} leads
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

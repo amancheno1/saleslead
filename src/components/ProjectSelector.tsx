@@ -8,7 +8,6 @@ export default function ProjectSelector() {
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
-  const [newProjectGoal, setNewProjectGoal] = useState(50);
   const [loading, setLoading] = useState(false);
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -16,10 +15,9 @@ export default function ProjectSelector() {
     setLoading(true);
 
     try {
-      await createProject(newProjectName, newProjectDescription, newProjectGoal);
+      await createProject(newProjectName, newProjectDescription, 50);
       setNewProjectName('');
       setNewProjectDescription('');
-      setNewProjectGoal(50);
       setShowNewProject(false);
       setShowDropdown(false);
     } catch (error: any) {
@@ -133,20 +131,6 @@ export default function ProjectSelector() {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Descripción opcional"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Semanal de Leads
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={newProjectGoal}
-                  onChange={(e) => setNewProjectGoal(parseInt(e.target.value) || 50)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 

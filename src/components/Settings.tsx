@@ -11,14 +11,12 @@ export default function Settings({ onUpdate }: SettingsProps) {
   const { currentProject, updateProject, userRole } = useProject();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [weeklyGoal, setWeeklyGoal] = useState(50);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (currentProject) {
       setProjectName(currentProject.name);
       setProjectDescription(currentProject.description || '');
-      setWeeklyGoal(currentProject.weekly_goal);
     }
   }, [currentProject]);
 
@@ -32,7 +30,6 @@ export default function Settings({ onUpdate }: SettingsProps) {
       await updateProject({
         name: projectName,
         description: projectDescription || null,
-        weekly_goal: weeklyGoal
       });
 
       alert('Configuración guardada correctamente');
@@ -121,23 +118,6 @@ export default function Settings({ onUpdate }: SettingsProps) {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Descripción opcional del proyecto"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Meta de Leads Semanal
-            </label>
-            <input
-              type="number"
-              required
-              min="1"
-              value={weeklyGoal}
-              onChange={(e) => setWeeklyGoal(parseInt(e.target.value) || 0)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="mt-2 text-sm text-gray-500">
-              Define el número objetivo de leads que deseas capturar por semana
-            </p>
           </div>
 
           <div className="flex justify-end pt-4 border-t">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Calendar, DollarSign, Target, Phone, CheckCircle, XCircle, Clock, BarChart3, Zap, ArrowUp, Activity, Download, ArrowRight } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Target, Phone, CheckCircle, XCircle, BarChart3, Zap, Activity, Download, ArrowRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
@@ -57,8 +57,6 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
     });
 
-    const weeklyGoal = currentProject?.weekly_goal || 50;
-    const monthlyGoal = weeklyGoal * 4;
     const totalLeads = monthlyLeads.length;
     const scheduled = monthlyLeads.filter(l => l.scheduled_call_date).length;
     const attended = monthlyLeads.filter(l => l.attended_meeting === 'si').length;
@@ -69,10 +67,10 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     const totalRevenue = monthlyLeads.reduce((sum, l) => sum + (l.sale_amount || 0), 0);
     const totalCashCollected = monthlyLeads.reduce((sum, l) => sum + (l.cash_collected || 0), 0);
 
-    const scheduledRate = monthlyGoal > 0 ? (scheduled / monthlyGoal) * 100 : 0;
     const showRate = scheduled > 0 ? (attended / scheduled) * 100 : 0;
     const noShowRate = scheduled > 0 ? (noShow / scheduled) * 100 : 0;
     const closeRate = scheduled > 0 ? (sales / scheduled) * 100 : 0;
+    const scheduledRate = totalLeads > 0 ? (scheduled / totalLeads) * 100 : 0;
 
     const getMonday = (date: Date) => {
       const day = date.getDay();
@@ -84,7 +82,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
     const monday = getMonday(new Date(firstDayOfMonth));
 
-    const leadsByWeek: { week: number; leads: number; scheduledLeads: number; noShowLeads: number; goal: number; percentage: number }[] = [];
+    const leadsByWeek: { week: number; leads: number; scheduledLeads: number; noShowLeads: number }[] = [];
 
     for (let i = 0; i < 6; i++) {
       const weekStart = new Date(monday);
@@ -108,14 +106,10 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
         leads: weekLeads.length,
         scheduledLeads: weekScheduledLeads,
         noShowLeads: weekNoShowLeads,
-        goal: weeklyGoal,
-        percentage: weekLeads.length > 0 ? (weekScheduledLeads / weekLeads.length) * 100 : 0
       });
     }
 
     return {
-      weeklyGoal,
-      monthlyGoal,
       totalLeads,
       scheduled,
       attended,
@@ -184,8 +178,6 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     XLSX.utils.book_append_sheet(wb, wsInfo, 'Información');
 
     const summaryData = [
-      { 'Métrica': 'Meta Semanal', 'Valor': metrics.weeklyGoal },
-      { 'Métrica': 'Meta Mensual', 'Valor': metrics.monthlyGoal },
       { 'Métrica': 'Total Leads', 'Valor': metrics.totalLeads },
       { 'Métrica': 'Llamadas Agendadas', 'Valor': metrics.scheduled },
       { 'Métrica': 'Llamadas Asistidas', 'Valor': metrics.attended },
@@ -210,8 +202,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       'Agendados': week.scheduledLeads,
       'No Show': week.noShowLeads,
       'No Show Rate': week.scheduledLeads > 0 ? `${((week.noShowLeads / week.scheduledLeads) * 100).toFixed(1)}%` : '0%',
-      'Meta': week.goal,
-      '% Agendados': `${week.percentage.toFixed(1)}%`
+      '% Agendados': week.leads > 0 ? `${((week.scheduledLeads / week.leads) * 100).toFixed(1)}%` : '0%'
     }));
 
     const totalRow = {
@@ -220,7 +211,6 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
       'Agendados': metrics.scheduled,
       'No Show': metrics.noShow,
       'No Show Rate': `${metrics.noShowRate.toFixed(1)}%`,
-      'Meta': metrics.monthlyGoal,
       '% Agendados': metrics.totalLeads > 0 ? `${((metrics.scheduled / metrics.totalLeads) * 100).toFixed(1)}%` : '0%'
     };
 
@@ -284,16 +274,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                   <div className="text-center">
                     <p className="text-sm font-bold text-blue-100 uppercase tracking-wider mb-2">Total Leads</p>
                     <p className="text-6xl md:text-7xl font-black text-white mb-3">{metrics.totalLeads}</p>
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="h-2 w-32 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-full transition-all duration-1000 shadow-lg"
-                          style={{ width: `${Math.min((metrics.totalLeads / metrics.monthlyGoal) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-black text-white">{((metrics.totalLeads / metrics.monthlyGoal) * 100).toFixed(0)}%</span>
-                    </div>
-                    <p className="text-xs text-blue-200 mt-2 font-medium">de {metrics.monthlyGoal} meta mensual</p>
+                    <p className="text-xs text-blue-200 mt-2 font-medium">{metrics.scheduled} agendados este mes</p>
                   </div>
                 </div>
               </div>
@@ -315,7 +296,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                     <Target className="text-white" size={32} />
                   </div>
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-gray-900">Metas y Progreso</h2>
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900">Leads por Semana</h2>
                     <p className="text-sm text-gray-600 font-medium">Seguimiento semanal detallado</p>
                   </div>
                 </div>
@@ -325,28 +306,26 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-bold text-white/90 uppercase tracking-wide mb-1">Meta Mensual Total</p>
-                        <p className="text-xs text-white/70 font-medium">4 semanas × {metrics.weeklyGoal} leads semanales</p>
+                        <p className="text-sm font-bold text-white/90 uppercase tracking-wide mb-1">Total del Mes</p>
+                        <p className="text-xs text-white/70 font-medium">Leads registrados en el CRM</p>
                       </div>
                       <div className="text-right">
                         <p className="text-5xl font-black text-white">{metrics.totalLeads}</p>
-                        <p className="text-sm text-white/80 font-bold">de {metrics.monthlyGoal} leads</p>
+                        <p className="text-sm text-white/80 font-bold">{metrics.scheduled} agendados</p>
                       </div>
                     </div>
-                    <div className="relative h-8 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-                      <div
-                        className={`absolute h-full rounded-full transition-all duration-1000 shadow-lg ${
-                          (metrics.totalLeads / metrics.monthlyGoal) * 100 >= 100
-                            ? 'bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500'
-                            : 'bg-gradient-to-r from-white via-blue-100 to-cyan-200'
-                        }`}
-                        style={{ width: `${Math.min((metrics.totalLeads / metrics.monthlyGoal) * 100, 100)}%` }}
-                      >
-                        <div className="flex items-center justify-center h-full">
-                          <span className="text-sm font-black text-blue-900">
-                            {((metrics.totalLeads / metrics.monthlyGoal) * 100).toFixed(0)}%
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+                        <p className="text-2xl font-black text-white">{metrics.scheduled}</p>
+                        <p className="text-xs text-white/70 font-bold">Agendados</p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+                        <p className="text-2xl font-black text-white">{metrics.attended}</p>
+                        <p className="text-xs text-white/70 font-bold">Asistidos</p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
+                        <p className="text-2xl font-black text-white">{metrics.noShow}</p>
+                        <p className="text-xs text-white/70 font-bold">No Show</p>
                       </div>
                     </div>
                   </div>
@@ -354,61 +333,60 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-black text-gray-900 mb-4 uppercase tracking-wide">Desglose Semanal</h3>
-                  {metrics.leadsByWeek.map((weekData, index) => (
-                    <div
-                      key={weekData.week}
-                      onClick={() => handleWeekClick(index)}
-                      className="group relative overflow-hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-blue-500 rounded-2xl blur-md opacity-50"></div>
-                              <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <span className="text-white text-xl font-black">{weekData.week}</span>
+                  {metrics.leadsByWeek.map((weekData, index) => {
+                    const agendadosPct = weekData.leads > 0 ? (weekData.scheduledLeads / weekData.leads) * 100 : 0;
+                    return (
+                      <div
+                        key={weekData.week}
+                        onClick={() => handleWeekClick(index)}
+                        className="group relative overflow-hidden bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div className="absolute inset-0 bg-blue-500 rounded-2xl blur-md opacity-50"></div>
+                                <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                  <span className="text-white text-xl font-black">{weekData.week}</span>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-base font-black text-gray-900">Semana {weekData.week}</p>
+                                <p className="text-sm text-gray-600 font-semibold">{weekData.leads} leads</p>
                               </div>
                             </div>
-                            <div>
-                              <p className="text-base font-black text-gray-900">Semana {weekData.week}</p>
-                              <p className="text-sm text-gray-600 font-semibold">Meta: {weekData.goal} leads</p>
+                            <div className="text-right">
+                              <div className="flex items-center gap-4 justify-end mb-1">
+                                <div className="text-center">
+                                  <p className="text-2xl font-black text-blue-600">{weekData.scheduledLeads}</p>
+                                  <p className="text-[10px] text-gray-500 font-bold uppercase">Agendadas</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-2xl font-black text-red-500">{weekData.noShowLeads}</p>
+                                  <p className="text-[10px] text-gray-500 font-bold uppercase">No Show</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 justify-end mt-2">
+                                <p className={`text-xs font-bold ${
+                                  weekData.scheduledLeads > 0 && (weekData.noShowLeads / weekData.scheduledLeads) * 100 > 30
+                                    ? 'text-red-600' : 'text-green-600'
+                                }`}>
+                                  {weekData.scheduledLeads > 0 ? ((weekData.noShowLeads / weekData.scheduledLeads) * 100).toFixed(0) : 0}% no show
+                                </p>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="flex items-center gap-4 justify-end mb-1">
-                              <div className="text-center">
-                                <p className="text-2xl font-black text-blue-600">{weekData.scheduledLeads}</p>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase">Agendadas</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-2xl font-black text-red-500">{weekData.noShowLeads}</p>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase">No Show</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 justify-end mt-2">
-                              <p className={`text-xs font-bold ${
-                                weekData.scheduledLeads > 0 && (weekData.noShowLeads / weekData.scheduledLeads) * 100 > 30
-                                  ? 'text-red-600' : 'text-green-600'
-                              }`}>
-                                {weekData.scheduledLeads > 0 ? ((weekData.noShowLeads / weekData.scheduledLeads) * 100).toFixed(0) : 0}% no show
-                              </p>
-                            </div>
+                          <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="absolute h-full rounded-full transition-all duration-1000 shadow-lg bg-gradient-to-r from-blue-500 to-cyan-500"
+                              style={{ width: `${Math.min(agendadosPct, 100)}%` }}
+                            />
                           </div>
-                        </div>
-                        <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className={`absolute h-full rounded-full transition-all duration-1000 shadow-lg ${
-                              weekData.percentage >= 100 ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500' :
-                              weekData.percentage >= 80 ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500' :
-                              'bg-gradient-to-r from-red-500 via-rose-500 to-pink-500'
-                            }`}
-                            style={{ width: `${Math.min(weekData.percentage, 100)}%` }}
-                          />
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-4 md:p-6 shadow-2xl mt-6">
                     <div className="absolute inset-0 bg-black/10"></div>
@@ -471,7 +449,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                     <div className="relative z-10">
                       <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Agendadas</p>
                       <p className="text-4xl font-black text-orange-600 mb-1">{metrics.scheduled}</p>
-                      <p className="text-xs text-gray-600 font-semibold">{metrics.scheduledRate.toFixed(0)}% de meta</p>
+                      <p className="text-xs text-gray-600 font-semibold">{metrics.scheduledRate.toFixed(0)}% de leads</p>
                     </div>
                   </div>
 
@@ -621,7 +599,7 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
                       <Users size={20} className="text-white/80" />
                     </div>
                     <p className="text-5xl font-black text-white mb-2">{metrics.totalLeads}</p>
-                    <p className="text-sm text-white/80 font-bold">de {metrics.monthlyGoal} meta</p>
+                    <p className="text-sm text-white/80 font-bold">este mes</p>
                   </div>
                 </div>
 
