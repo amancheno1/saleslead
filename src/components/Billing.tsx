@@ -335,10 +335,6 @@ export default function Billing({ refreshTrigger }: BillingProps) {
                   <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.email || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Setter</label>
-                  <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.setter || '-'}</p>
-                </div>
-                <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Closer</label>
                   <p className="mt-1 text-sm text-gray-900 font-medium">{selectedLead.closer || '-'}</p>
                 </div>

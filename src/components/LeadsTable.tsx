@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pencil, Trash2, Download } from 'lucide-react';
+import { Pencil, Trash2, Download, MessageCircle, Mail } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
@@ -79,10 +79,8 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
   };
 
   const calculateCommissions = (lead: Lead) => {
-    const setterCommissionSale = lead.sale_amount ? lead.sale_amount * 0.07 : 0;
-    const setterCommissionCash = lead.cash_collected ? lead.cash_collected * 0.07 : 0;
     const closerCommission = lead.cash_collected ? lead.cash_collected * 0.08 : 0;
-    return { setterCommissionSale, setterCommissionCash, closerCommission };
+    return { closerCommission };
   };
 
   const exportToExcel = () => {
@@ -91,12 +89,12 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
     const infoData = [
       ['Sistema de Gestión de Leads'],
       [''],
-      ['Propiedad de:', 'Alejandro Mancheño Rey'],
+      ['Propiedad de:', 'Amaogoia Louvier'],
       ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')],
       ['Periodo:', viewMode === 'monthly' ? `${getMonthName(selectedMonth)} ${selectedYear}` : 'Total'],
       ['Total de Leads:', filteredLeads.length],
       [''],
-      ['© ' + new Date().getFullYear() + ' Alejandro Mancheño Rey. Todos los derechos reservados.']
+      ['© ' + new Date().getFullYear() + ' Amaogoia Louvier. Todos los derechos reservados.']
     ];
 
     const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
@@ -127,10 +125,8 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         exportData['Importe Inicial'] = lead.initial_payment || 0;
       }
 
-      exportData['Setter'] = lead.setter || '';
-      exportData['Comisión Setter'] = commissions.setterCommissionCash;
       exportData['Closer'] = lead.closer || '';
-      exportData['Comisión Closer'] = commissions.closerCommission;
+      exportData['Comision Closer'] = commissions.closerCommission;
       exportData['Observaciones'] = lead.observations || '';
 
       return exportData;
@@ -145,7 +141,6 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
       sales: number;
       totalRevenue: number;
       totalCash: number;
-      setterCommissions: number;
       closerCommissions: number;
     }} = {};
 
@@ -160,7 +155,6 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
           sales: 0,
           totalRevenue: 0,
           totalCash: 0,
-          setterCommissions: 0,
           closerCommissions: 0
         };
       }
@@ -170,7 +164,6 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
       if (lead.sale_made) monthlyData[monthKey].sales++;
       monthlyData[monthKey].totalRevenue += lead.sale_amount || 0;
       monthlyData[monthKey].totalCash += lead.cash_collected || 0;
-      monthlyData[monthKey].setterCommissions += commissions.setterCommissionCash;
       monthlyData[monthKey].closerCommissions += commissions.closerCommission;
     });
 
@@ -179,11 +172,9 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
       'Total Leads': data.leads,
       'Ventas Cerradas': data.sales,
       'Tasa de Cierre (%)': data.leads > 0 ? ((data.sales / data.leads) * 100).toFixed(2) : '0.00',
-      'Facturación Total': data.totalRevenue.toFixed(2),
+      'Facturacion Total': data.totalRevenue.toFixed(2),
       'Cash Collected': data.totalCash.toFixed(2),
-      'Comisiones Setter': data.setterCommissions.toFixed(2),
       'Comisiones Closer': data.closerCommissions.toFixed(2),
-      'Total Comisiones': (data.setterCommissions + data.closerCommissions).toFixed(2)
     }));
 
     const wsBilling = XLSX.utils.json_to_sheet(billingReport);
@@ -200,8 +191,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
           'Fecha Venta': new Date(lead.entry_date).toLocaleDateString('es-ES'),
           'Importe Venta': lead.sale_amount || 0,
           'Cash Collected': lead.cash_collected || 0,
-          'Comisión Setter': commissions.setterCommissionCash.toFixed(2),
-          'Comisión Closer': commissions.closerCommission.toFixed(2),
+          'Comision Closer': commissions.closerCommission.toFixed(2),
           'Closer': lead.closer || '',
           'Método Pago': lead.payment_method || ''
         };
@@ -294,19 +284,15 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nombre</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Form</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Entrada</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Contacto</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Entrada</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Llamada</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Asistió</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Asistio</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Resultado</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Venta</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Importe</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Cash</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Setter</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Com. Setter</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Closer</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Com. Closer</th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Acciones</th>
           </tr>
         </thead>
@@ -315,15 +301,36 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
             const commissions = calculateCommissions(lead);
             return (
               <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm text-gray-900">
+                <td className="px-4 py-3 text-sm font-medium text-gray-900">
                   {lead.first_name} {lead.last_name}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{lead.form_type}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {new Date(lead.entry_date).toLocaleDateString('es-ES')}
+                <td className="px-4 py-3 text-sm">
+                  <div className="flex gap-1">
+                    {lead.phone && (
+                      <a
+                        href={`https://wa.me/${lead.phone.replace(/[^0-9+]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+                        title="WhatsApp"
+                      >
+                        <MessageCircle size={15} />
+                      </a>
+                    )}
+                    {lead.email && (
+                      <a
+                        href={`mailto:${lead.email}`}
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Email"
+                      >
+                        <Mail size={15} />
+                      </a>
+                    )}
+                    {!lead.phone && !lead.email && <span className="text-gray-400 text-xs">-</span>}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">
-                  {lead.contact_date ? new Date(lead.contact_date).toLocaleDateString('es-ES') : '-'}
+                  {new Date(lead.entry_date).toLocaleDateString('es-ES')}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">
                   {lead.scheduled_call_date ? new Date(lead.scheduled_call_date).toLocaleDateString('es-ES') : '-'}
@@ -332,7 +339,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                   {lead.attended_meeting === null ? (
                     <span className="text-gray-400">-</span>
                   ) : lead.attended_meeting === 'si' ? (
-                    <span className="text-green-600 font-medium">Sí</span>
+                    <span className="text-green-600 font-medium">Si</span>
                   ) : lead.attended_meeting === 'cancelada' ? (
                     <span className="text-red-600 font-medium">Cancelada</span>
                   ) : lead.attended_meeting === 'no_show' ? (
@@ -346,7 +353,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 <td className="px-4 py-3 text-sm text-gray-600">{lead.result || '-'}</td>
                 <td className="px-4 py-3 text-sm">
                   {lead.sale_made ? (
-                    <span className="text-green-600 font-medium">Sí</span>
+                    <span className="text-green-600 font-medium">Si</span>
                   ) : (
                     <span className="text-gray-400">No</span>
                   )}
@@ -357,16 +364,9 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 <td className="px-4 py-3 text-sm text-gray-900 font-medium">
                   {lead.cash_collected ? `€${lead.cash_collected.toFixed(2)}` : '-'}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{lead.setter || '-'}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  €{commissions.setterCommissionCash.toFixed(2)}
-                </td>
                 <td className="px-4 py-3 text-sm text-gray-600">{lead.closer || '-'}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  €{commissions.closerCommission.toFixed(2)}
-                </td>
                 <td className="px-4 py-3 text-sm">
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <button
                       onClick={() => onEdit(lead)}
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"

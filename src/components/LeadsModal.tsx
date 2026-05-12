@@ -110,18 +110,11 @@ export default function LeadsModal({ isOpen, onClose, leads, title, subtitle }: 
                               <h3 className="text-lg font-bold text-gray-900">
                                 {lead.first_name} {lead.last_name}
                               </h3>
-                              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                                {lead.setter && (
-                                  <p className="text-sm text-gray-600">
-                                    <span className="font-semibold">Setter:</span> {lead.setter}
-                                  </p>
-                                )}
-                                {lead.closer && (
-                                  <p className="text-sm text-gray-600">
-                                    <span className="font-semibold">Closer:</span> {lead.closer}
-                                  </p>
-                                )}
-                              </div>
+                              {lead.closer && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  <span className="font-semibold">Closer:</span> {lead.closer}
+                                </p>
+                              )}
                             </div>
                           </div>
                           {getStatusBadge(lead)}

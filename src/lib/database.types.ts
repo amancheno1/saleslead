@@ -59,7 +59,6 @@ export interface Database {
           payment_method: string | null
           cash_collected: number | null
           closer: string | null
-          setter: string | null
           installment_count: number | null
           initial_payment: number | null
           created_at: string
@@ -85,7 +84,6 @@ export interface Database {
           payment_method?: string | null
           cash_collected?: number | null
           closer?: string | null
-          setter?: string | null
           installment_count?: number | null
           initial_payment?: number | null
           created_at?: string
@@ -111,7 +109,6 @@ export interface Database {
           payment_method?: string | null
           cash_collected?: number | null
           closer?: string | null
-          setter?: string | null
           installment_count?: number | null
           initial_payment?: number | null
           created_at?: string
@@ -134,41 +131,6 @@ export interface Database {
         Update: {
           id?: string
           weekly_goal?: number
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      meta_leads: {
-        Row: {
-          id: string
-          project_id: string
-          user_id: string
-          week_start_date: string
-          week_number: number
-          year: number
-          leads_count: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          user_id: string
-          week_start_date: string
-          week_number: number
-          year: number
-          leads_count?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          user_id?: string
-          week_start_date?: string
-          week_number?: number
-          year?: number
-          leads_count?: number
           created_at?: string
           updated_at?: string
         }

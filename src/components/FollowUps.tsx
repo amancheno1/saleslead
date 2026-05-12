@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, CheckCircle, Clock, Phone, MessageCircle, Mail, X, Search, Filter, ArrowRight } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Phone, MessageCircle, Mail, X, Search, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
@@ -135,6 +135,19 @@ export default function FollowUps() {
       case 'manychat': return 'ManyChat';
       default: return type;
     }
+  };
+
+  const getLeadForFollowUp = (fu: FollowUpWithLead) => {
+    return leads.find(l => l.id === fu.lead_id);
+  };
+
+  const openWhatsApp = (phone: string) => {
+    const cleaned = phone.replace(/[^0-9+]/g, '');
+    window.open(`https://wa.me/${cleaned}`, '_blank');
+  };
+
+  const openEmail = (email: string, name: string) => {
+    window.open(`mailto:${email}?subject=Seguimiento - ${name}`, '_blank');
   };
 
   const filteredFollowUps = followUps.filter(fu => {
@@ -355,7 +368,42 @@ export default function FollowUps() {
                   </div>
 
                   {fu.status === 'pending' && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const lead = getLeadForFollowUp(fu);
+                        return (
+                          <>
+                            {lead?.phone && (
+                              <button
+                                onClick={() => openWhatsApp(lead.phone!)}
+                                className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                                title="WhatsApp"
+                              >
+                                <MessageCircle size={18} />
+                              </button>
+                            )}
+                            {lead?.email && (
+                              <button
+                                onClick={() => openEmail(lead.email!, `${lead.first_name} ${lead.last_name}`)}
+                                className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
+                                title="Email"
+                              >
+                                <Mail size={18} />
+                              </button>
+                            )}
+                            {lead?.phone && (
+                              <a
+                                href={`tel:${lead.phone}`}
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                                title="Llamar"
+                              >
+                                <Phone size={18} />
+                              </a>
+                            )}
+                          </>
+                        );
+                      })()}
+                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
                       <button
                         onClick={() => markComplete(fu.id)}
                         className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"

@@ -172,12 +172,12 @@ export default function Dashboard({ refreshTrigger, onNavigate }: DashboardProps
     const infoData = [
       ['Sistema de Gestión de Leads'],
       [''],
-      ['Propiedad de:', 'Alejandro Mancheño Rey'],
+      ['Propiedad de:', 'Amaogoia Louvier'],
       ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')],
       ['Tipo de Informe:', 'Dashboard - Métricas del Mes'],
       ['Periodo:', currentMonth],
       [''],
-      ['© ' + new Date().getFullYear() + ' Alejandro Mancheño Rey. Todos los derechos reservados.']
+      ['© ' + new Date().getFullYear() + ' Amaogoia Louvier. Todos los derechos reservados.']
     ];
 
     const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
