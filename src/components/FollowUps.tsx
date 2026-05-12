@@ -3,6 +3,7 @@ import { Plus, CheckCircle, Clock, Phone, MessageCircle, Mail, X, Search, Filter
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
+import ContactDetail from './ContactDetail';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -21,6 +22,7 @@ export default function FollowUps() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('pending');
   const [searchTerm, setSearchTerm] = useState('');
+  const [contactDetailLead, setContactDetailLead] = useState<Lead | null>(null);
   const [formData, setFormData] = useState({
     lead_id: '',
     type: 'call',
@@ -348,9 +350,15 @@ export default function FollowUps() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-gray-900 text-sm truncate">
+                      <button
+                        onClick={() => {
+                          const lead = getLeadForFollowUp(fu);
+                          if (lead) setContactDetailLead(lead);
+                        }}
+                        className="font-bold text-gray-900 text-sm truncate hover:text-blue-600 hover:underline transition-colors text-left"
+                      >
                         {fu.leads ? `${fu.leads.first_name} ${fu.leads.last_name}` : 'Lead'}
-                      </p>
+                      </button>
                       <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600 font-medium">
                         {getTypeLabel(fu.type)}
                       </span>
@@ -433,6 +441,12 @@ export default function FollowUps() {
           )}
         </div>
       </div>
+
+      <ContactDetail
+        lead={contactDetailLead}
+        isOpen={!!contactDetailLead}
+        onClose={() => setContactDetailLead(null)}
+      />
     </div>
   );
 }

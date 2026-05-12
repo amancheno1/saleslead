@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Pencil, Trash2, Download, Upload, MessageCircle, Mail, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Pencil, Trash2, Download, Upload, MessageCircle, Mail, AlertCircle, CheckCircle, X, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
+import ContactDetail from './ContactDetail';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -27,6 +28,7 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
   const [importHeaders, setImportHeaders] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -455,7 +457,12 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
             return (
               <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  {lead.first_name} {lead.last_name}
+                  <button
+                    onClick={() => setSelectedLead(lead)}
+                    className="text-left hover:text-blue-600 hover:underline transition-colors font-bold"
+                  >
+                    {lead.first_name} {lead.last_name}
+                  </button>
                 </td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex gap-1">
@@ -520,6 +527,13 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                 <td className="px-4 py-3 text-sm text-gray-600">{lead.closer || '-'}</td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex gap-1">
+                    <button
+                      onClick={() => setSelectedLead(lead)}
+                      className="p-1 text-cyan-600 hover:bg-cyan-50 rounded transition-colors"
+                      title="Ver contacto"
+                    >
+                      <Eye size={16} />
+                    </button>
                     <button
                       onClick={() => onEdit(lead)}
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -681,6 +695,12 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
           </div>
         </div>
       )}
+
+      <ContactDetail
+        lead={selectedLead}
+        isOpen={!!selectedLead}
+        onClose={() => setSelectedLead(null)}
+      />
     </div>
   );
 }

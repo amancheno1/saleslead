@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Phone, Clock, CheckCircle, XCircle, User, Calendar as CalendarIcon, MessageCircle, Mail, X, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Phone, Clock, CheckCircle, XCircle, User, Calendar as CalendarIcon, MessageCircle, Mail, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useProject } from '../context/ProjectContext';
+import ContactDetail from './ContactDetail';
 import type { Database } from '../lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
@@ -24,6 +25,7 @@ export default function CalendarView() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [contactDetailLead, setContactDetailLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -499,10 +501,28 @@ export default function CalendarView() {
                   )}
                 </div>
               </div>
+
+              {selectedEvent.lead && (
+                <div className="border-t border-gray-100 pt-4">
+                  <button
+                    onClick={() => { setContactDetailLead(selectedEvent.lead!); setSelectedEvent(null); }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-bold text-sm transition-colors"
+                  >
+                    <User size={16} />
+                    Ver Ficha Completa
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      <ContactDetail
+        lead={contactDetailLead}
+        isOpen={!!contactDetailLead}
+        onClose={() => setContactDetailLead(null)}
+      />
     </>
   );
 }

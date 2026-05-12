@@ -243,6 +243,32 @@ export interface Database {
           joined_at?: string
         }
       }
+      lead_notes: {
+        Row: {
+          id: string
+          lead_id: string
+          project_id: string
+          user_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          project_id: string
+          user_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          project_id?: string
+          user_id?: string
+          content?: string
+          created_at?: string
+        }
+      }
       invitation_codes: {
         Row: {
           id: string
