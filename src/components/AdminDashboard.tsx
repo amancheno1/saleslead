@@ -25,7 +25,7 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Equipo</h1>
-        <p className="text-gray-600">Administra miembros y códigos de invitación para Amz Kickstart</p>
+        <p className="text-gray-600">Administra miembros y códigos de invitación para Amagoia Closer de Ventas</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
