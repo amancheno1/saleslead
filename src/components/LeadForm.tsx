@@ -144,10 +144,10 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
             onChange={(e) => setFormData({ ...formData, form_type: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="guía">Guía</option>
-            <option value="calculadora">Calculadora</option>
-            <option value="dashboard">Dashboard</option>
-            <option value="nuevo programa">Nuevo Programa</option>
+            <option value="guía">Rous caso 1</option>
+            <option value="calculadora">Rous caso 2</option>
+            <option value="dashboard">Rous caso 3</option>
+            <option value="nuevo programa">Rous caso4</option>
           </select>
         </div>
 
