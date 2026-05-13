@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Calendar, UserCog, LayoutDashboard, Clock, Zap } from 'lucide-react';
+import { Users, UserPlus, Settings as SettingsIcon, LogOut, Menu, X, DollarSign, Award, Calendar, UserCog, LayoutDashboard, Clock, Zap, Columns2 as Columns } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
 import { useProject } from './context/ProjectContext';
 import Auth from './components/Auth';
@@ -12,13 +12,14 @@ import Commissions from './components/Commissions';
 import CalendarView from './components/CalendarView';
 import FollowUps from './components/FollowUps';
 import Automations from './components/Automations';
+import Pipeline from './components/Pipeline';
 import AdminDashboard from './components/AdminDashboard';
 import ProjectSelector from './components/ProjectSelector';
 import type { Database } from './lib/database.types';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 
-type View = 'dashboard' | 'leads' | 'add-lead' | 'billing' | 'commissions' | 'calendar' | 'follow-ups' | 'automations' | 'settings' | 'team';
+type View = 'dashboard' | 'leads' | 'add-lead' | 'pipeline' | 'billing' | 'commissions' | 'calendar' | 'follow-ups' | 'automations' | 'settings' | 'team';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -170,6 +171,12 @@ function App() {
                 active={currentView === 'add-lead'}
               />
               <NavButton
+                icon={Columns}
+                label="Pipeline"
+                view="pipeline"
+                active={currentView === 'pipeline'}
+              />
+              <NavButton
                 icon={Calendar}
                 label="Calendario"
                 view="calendar"
@@ -248,6 +255,7 @@ function App() {
                 {currentView === 'dashboard' && 'Dashboard'}
                 {currentView === 'leads' && 'Leads'}
                 {currentView === 'add-lead' && (editingLead ? 'Editar Lead' : 'Agregar Lead')}
+                {currentView === 'pipeline' && 'Pipeline'}
                 {currentView === 'calendar' && 'Calendario'}
                 {currentView === 'follow-ups' && 'Seguimientos'}
                 {currentView === 'automations' && 'Automatizaciones'}
@@ -294,11 +302,21 @@ function App() {
                 </div>
               )}
 
+              {currentView === 'pipeline' && (
+                <div>
+                  <div className="mb-6 md:mb-8">
+                    <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Pipeline</h2>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Mueve leads entre etapas del proceso de venta</p>
+                  </div>
+                  <Pipeline />
+                </div>
+              )}
+
               {currentView === 'calendar' && (
                 <div>
                   <div className="mb-6 md:mb-8">
                     <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Calendario</h2>
-                    <p className="text-sm md:text-lg text-gray-600 font-medium">Visualiza llamadas agendadas y seguimientos</p>
+                    <p className="text-sm md:text-lg text-gray-600 font-medium">Visualiza llamadas agendadas, seguimientos y citas</p>
                   </div>
                   <CalendarView />
                 </div>

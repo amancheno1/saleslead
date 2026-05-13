@@ -61,6 +61,7 @@ export interface Database {
           closer: string | null
           installment_count: number | null
           initial_payment: number | null
+          pipeline_status: string | null
           created_at: string
           updated_at: string
         }
@@ -86,6 +87,7 @@ export interface Database {
           closer?: string | null
           installment_count?: number | null
           initial_payment?: number | null
+          pipeline_status?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -111,6 +113,7 @@ export interface Database {
           closer?: string | null
           installment_count?: number | null
           initial_payment?: number | null
+          pipeline_status?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -267,6 +270,96 @@ export interface Database {
           user_id?: string
           content?: string
           created_at?: string
+        }
+      }
+      project_tags: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          color: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          color?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          name?: string
+          color?: string
+          created_at?: string
+        }
+      }
+      lead_tags: {
+        Row: {
+          id: string
+          lead_id: string
+          tag_id: string
+          project_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          tag_id: string
+          project_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          tag_id?: string
+          project_id?: string | null
+          created_at?: string
+        }
+      }
+      appointments: {
+        Row: {
+          id: string
+          project_id: string
+          lead_id: string
+          user_id: string
+          title: string
+          description: string | null
+          date: string
+          start_time: string
+          end_time: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          lead_id: string
+          user_id: string
+          title: string
+          description?: string | null
+          date: string
+          start_time: string
+          end_time?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          lead_id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          date?: string
+          start_time?: string
+          end_time?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
         }
       }
       invitation_codes: {
