@@ -30,6 +30,8 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
   const [formData, setFormData] = useState<Lead>({
     first_name: editLead?.first_name || '',
     last_name: editLead?.last_name || '',
+    phone: editLead?.phone || null,
+    email: editLead?.email || null,
     form_type: editLead?.form_type || 'guía',
     entry_date: editLead?.entry_date || getDefaultDate(),
     contact_date: editLead?.contact_date || null,
@@ -102,6 +104,32 @@ export default function LeadForm({ onSuccess, onCancel, editLead }: LeadFormProp
             required
             value={formData.last_name}
             onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Telefono
+          </label>
+          <input
+            type="tel"
+            value={formData.phone || ''}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value || null })}
+            placeholder="+34 612 345 678"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            value={formData.email || ''}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value || null })}
+            placeholder="correo@ejemplo.com"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
