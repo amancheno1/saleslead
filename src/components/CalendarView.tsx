@@ -182,7 +182,8 @@ export default function CalendarView() {
   };
 
   const openEmail = (email: string, name: string) => {
-    window.open(`mailto:${email}?subject=Seguimiento - ${name}`, '_blank');
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}&su=${encodeURIComponent(`Seguimiento - ${name}`)}`;
+    window.open(gmailUrl, '_blank');
   };
 
   if (loading) {

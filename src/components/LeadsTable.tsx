@@ -479,9 +479,11 @@ export default function LeadsTable({ onEdit, refreshTrigger }: LeadsTableProps) 
                     )}
                     {lead.email && (
                       <a
-                        href={`mailto:${lead.email}`}
+                        href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(lead.email)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Email"
+                        title="Gmail"
                       >
                         <Mail size={15} />
                       </a>

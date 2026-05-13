@@ -76,10 +76,8 @@ export default function ContactDetail({ lead, isOpen, onClose }: ContactDetailPr
 
   const sendEmail = () => {
     if (!lead?.email) return;
-    const params = new URLSearchParams();
-    if (emailSubject) params.set('subject', emailSubject);
-    if (emailBody) params.set('body', emailBody);
-    window.open(`mailto:${lead.email}?${params.toString()}`, '_blank');
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(lead.email)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.open(gmailUrl, '_blank');
   };
 
   const callPhone = () => {
