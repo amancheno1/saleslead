@@ -1,4 +1,4 @@
-# Amz Kickstart - Sistema de Gestión de Ventas
+# Amagpia louvier Closer - Sistema de Gestión de Ventas
 
 Sistema completo de gestión de leads para Amz Kickstart by Pol Brullas. Organiza y da seguimiento a todas tus oportunidades de negocio en un único proyecto centralizado.
 
