@@ -103,9 +103,12 @@ export default function Auth() {
             />
           </div>
 
-          <h1 className="text-4xl font-black text-center text-gray-900 mb-2 tracking-tight">
-            Closer
+          <h1 className="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-2 tracking-tight leading-tight">
+            Amagoia Louvier
           </h1>
+          <p className="text-center text-sm font-bold text-gray-700 mb-1 tracking-wide uppercase">
+            Sales Lead Manager
+          </p>
           <p className="text-center text-gray-600 font-semibold mb-8">
             {currentView === 'login' && 'Inicia sesión en tu cuenta'}
             {currentView === 'signup' && 'Crea una nueva cuenta'}
