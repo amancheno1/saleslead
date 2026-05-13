@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, UserPlus, Mail, Lock, ArrowLeft, Send, CheckCircle, Key } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, CheckCircle, Key } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type AuthView = 'login' | 'signup' | 'forgot-password';
@@ -96,18 +96,15 @@ export default function Auth() {
           )}
 
           <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl blur-lg opacity-75"></div>
-              <div className="relative p-5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl shadow-xl">
-                {currentView === 'login' && <LogIn className="text-white" size={36} />}
-                {currentView === 'signup' && <UserPlus className="text-white" size={36} />}
-                {currentView === 'forgot-password' && <Send className="text-white" size={36} />}
-              </div>
-            </div>
+            <img
+              src="/logo_amagoia.jpg"
+              alt="Closer - Amagoia Louvier"
+              className="w-32 h-32 object-contain rounded-2xl shadow-xl"
+            />
           </div>
 
           <h1 className="text-4xl font-black text-center text-gray-900 mb-2 tracking-tight">
-            Amaogoia Louvier
+            Closer
           </h1>
           <p className="text-center text-gray-600 font-semibold mb-8">
             {currentView === 'login' && 'Inicia sesión en tu cuenta'}

@@ -106,7 +106,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center p-4">
         <div className="text-center max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <img src="/favicon.svg" alt="Logo" className="w-20 h-20 mx-auto mb-4 shadow-lg rounded-2xl" />
+          <img src="/logo_amagoia.jpg" alt="Closer" className="w-24 h-24 mx-auto mb-4 shadow-lg rounded-2xl object-contain bg-white" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido</h2>
           <p className="text-gray-600 mb-6">No tienes proyectos todavia. Crea tu primer proyecto para comenzar.</p>
           <div className="mb-4">
@@ -132,10 +132,10 @@ function App() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <img src="/favicon.svg" alt="Logo" className="w-12 h-12 shadow-lg rounded-xl" />
+                <img src="/logo_amagoia.jpg" alt="Closer" className="w-12 h-12 shadow-lg rounded-xl object-contain bg-white" />
                 <div>
-                  <h1 className="text-lg font-black text-gray-900 tracking-tight leading-tight">Amaogoia Louvier</h1>
-                  <p className="text-xs text-gray-600 font-semibold">Closer de Ventas</p>
+                  <h1 className="text-lg font-black text-gray-900 tracking-tight leading-tight">Closer</h1>
+                  <p className="text-xs text-gray-600 font-semibold">Amagoia Louvier</p>
                 </div>
               </div>
               <button
@@ -243,7 +243,7 @@ function App() {
               <Menu size={24} />
             </button>
             <div className="flex items-center gap-2">
-              <img src="/favicon.svg" alt="Logo" className="w-8 h-8 rounded-lg shadow-md" />
+              <img src="/logo_amagoia.jpg" alt="Closer" className="w-8 h-8 rounded-lg shadow-md object-contain bg-white" />
               <h2 className="font-black text-gray-900 text-base tracking-tight">
                 {currentView === 'dashboard' && 'Dashboard'}
                 {currentView === 'leads' && 'Leads'}
@@ -361,7 +361,7 @@ function App() {
           <footer className="bg-white border-t border-gray-200 py-4 px-4 md:px-8">
             <div className="max-w-[1800px] mx-auto text-center">
               <p className="text-sm text-gray-600">
-                © {new Date().getFullYear()} <span className="font-semibold text-gray-900">Amaogoia Louvier</span>. Todos los derechos reservados.
+                © {new Date().getFullYear()} <span className="font-semibold text-gray-900">Closer - Amagoia Louvier</span>. Todos los derechos reservados.
               </p>
             </div>
           </footer>
